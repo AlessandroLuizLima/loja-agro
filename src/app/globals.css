@@ -1,26 +1,128 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
+/* ===== Design tokens da PetHouse (Tailwind v4: viram utilitários bg-brand, text-petrol, shadow-card…) ===== */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-poppins), ui-rounded, system-ui, sans-serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@theme {
+  --color-brand: #ff8a3d;
+  --color-brand-dark: #e8701f;
+  --color-brand-soft: #ffe7d6;
+  --color-petrol: #1f4e5f;
+  --color-petrol-dark: #163a47;
+  --color-petrol-soft: #e3eef1;
+  --color-sun: #ffd86b;
+  --color-sun-soft: #fff6d9;
+  --color-cream: #fffbf5;
+  --color-ink: #1d2b30;
+  --color-muted: #5f6f75;
+  --color-line: #ece4d8;
+  --color-mint: #e6f6ec;
+  --color-sky: #eaf0ff;
+  --color-rose: #fdebf1;
+
+  --shadow-card: 0 4px 18px rgb(31 78 95 / 0.08);
+  --shadow-lift: 0 12px 30px rgb(31 78 95 / 0.16);
+  --shadow-glow: 0 8px 20px rgb(255 138 61 / 0.38);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 9rem;
+  }
+  body {
+    @apply bg-cream font-sans text-ink antialiased;
+  }
+  h1, h2, h3, h4 {
+    @apply font-display text-balance;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ===== Utilitários próprios ===== */
+@utility container-page {
+  @apply mx-auto w-full max-w-7xl px-4 lg:px-6;
+}
+
+@utility btn {
+  @apply inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full px-6 font-display font-semibold transition duration-150 select-none active:scale-[.97];
+}
+@utility btn-primary {
+  @apply bg-brand text-white shadow-glow hover:bg-brand-dark;
+}
+@utility btn-petrol {
+  @apply bg-petrol text-white hover:bg-petrol-dark;
+}
+@utility icon-btn {
+  @apply inline-flex size-11 items-center justify-center rounded-xl text-petrol transition hover:bg-petrol-soft;
+}
+@utility badge {
+  @apply absolute top-2.5 left-2.5 z-10 rounded-full px-2.5 py-1 font-display text-xs font-extrabold;
+}
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@keyframes bump {
+  50% { scale: 1.35; }
+}
+@keyframes reveal {
+  from { opacity: 0; translate: 0 24px; }
+}
+
+/* Cards surgem ao rolar — puro CSS (scroll-driven animations), sem JS */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 35%;
+    }
+  }
+}
+
+/* Menu e carrinho laterais: <dialog> nativo que desliza ao abrir.
+   (Keyframes em vez de @starting-style: o compilador de CSS atual descarta o @starting-style.) */
+@keyframes drawer-in {
+  from { transform: translateX(var(--drawer-from)); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+}
+dialog.drawer {
+  --drawer-from: -100%;
+  inset-block: 0;
+  inset-inline: 0 auto;
+}
+dialog.drawer.drawer-right {
+  --drawer-from: 100%;
+  inset-inline: auto 0;
+}
+dialog.drawer[open] {
+  animation: drawer-in 0.3s ease;
+}
+dialog.drawer[open]::backdrop {
+  animation: fade-in 0.3s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  dialog.drawer[open],
+  dialog.drawer[open]::backdrop { animation: none; }
+}
+
+/* Rodapé: acordeão no celular, colunas abertas no desktop */
+.footer-col summary::-webkit-details-marker { display: none; }
+.footer-col summary::after {
+  content: "+";
+  color: var(--color-brand);
+  font-size: 1.2rem;
+}
+.footer-col[open] summary::after { content: "–"; }
+@media (width >= 64rem) {
+  .footer-col summary::after { display: none; }
+  .footer-col::details-content { content-visibility: visible; display: block; }
 }

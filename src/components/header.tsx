@@ -2,30 +2,26 @@
 
 import { Flame, Menu, Search, ShoppingCart, User, X } from "lucide-react";
 import Link from "next/link";
-import { useRef } from "react";
-import { navLinks } from "@/lib/products";
+import { useRef, type ReactNode } from "react";
+import { menuCollections } from "@/lib/catalog";
 import { useCart } from "./cart-provider";
-import { PawIcon } from "./icons";
+import { Logo } from "./logo";
 
-function Logo() {
-  return (
-    <Link href="/" aria-label="PetHouse - página inicial" className="flex items-center gap-1.5 font-display text-2xl font-bold text-petrol lg:text-[1.7rem]">
-      <PawIcon className="size-8 text-brand" />
-      Pet<span className="text-brand">House</span>
-    </Link>
-  );
-}
-
-export function Header() {
-  const { count } = useCart();
-  const drawer = useRef<HTMLDialogElement>(null);
-  const close = () => drawer.current?.close();
+/**
+ * Cabeçalho da loja. `account` é um Server Component (lê o cookie de sessão)
+ * que chega já dentro de um <Suspense>, então o resto do cabeçalho é estático.
+ */
+export function Header({ account, drawerAccount }: { account: ReactNode; drawerAccount: ReactNode }) {
+  const { count, ready, openDrawer } = useCart();
+  const menu = useRef<HTMLDialogElement>(null);
+  const close = () => menu.current?.close();
+  const links = menuCollections();
 
   return (
     <>
       <header className="sticky top-0 z-40 bg-white/90 shadow-[0_2px_12px_rgb(31_78_95/.06)] backdrop-blur-md">
         <div className="container-page flex flex-wrap items-center gap-2.5 py-3 lg:flex-nowrap lg:gap-6 lg:py-4">
-          <button type="button" aria-label="Abrir menu" onClick={() => drawer.current?.showModal()} className="icon-btn lg:hidden">
+          <button type="button" aria-label="Abrir menu" onClick={() => menu.current?.showModal()} className="icon-btn lg:hidden">
             <Menu className="size-6" />
           </button>
 
@@ -34,11 +30,15 @@ export function Header() {
           </div>
 
           <form role="search" action="/busca" className="relative order-last basis-full lg:order-none lg:mx-auto lg:max-w-xl lg:flex-1 lg:basis-auto">
-            <label htmlFor="q" className="sr-only">Buscar produtos</label>
+            <label htmlFor="q" className="sr-only">
+              Buscar produtos
+            </label>
             <input
               id="q"
               name="q"
               type="search"
+              required
+              minLength={2}
               placeholder="O que seu pet precisa hoje?"
               className="h-12 w-full rounded-full border-2 border-line bg-cream pr-14 pl-5 outline-none transition focus:border-brand"
             />
@@ -47,36 +47,29 @@ export function Header() {
             </button>
           </form>
 
-          <Link href="#" className="icon-btn gap-2 lg:w-auto lg:px-2.5" aria-label="Minha conta">
-            <User className="size-6" />
-            <span className="hidden text-left text-xs leading-tight text-petrol lg:block">
-              Olá, visitante
-              <b className="block">Entrar / Cadastrar</b>
-            </span>
-          </Link>
+          {account}
 
-          <Link href="#" className="icon-btn relative" aria-label={`Carrinho com ${count} itens`}>
+          <button type="button" onClick={openDrawer} className="icon-btn relative" aria-label={`Abrir carrinho com ${count} ${count === 1 ? "item" : "itens"}`}>
             <ShoppingCart className="size-6" />
-            <span
-              key={count}
-              className="absolute top-0.5 right-0 grid h-5 min-w-5 animate-[bump_.3s_ease] place-items-center rounded-full bg-brand px-1 text-[0.7rem] font-bold text-white"
-            >
-              {count}
-            </span>
-          </Link>
+            {ready && (
+              <span key={count} className="absolute top-0.5 right-0 grid h-5 min-w-5 animate-[bump_.3s_ease] place-items-center rounded-full bg-brand px-1 text-[0.7rem] font-bold text-white">
+                {count}
+              </span>
+            )}
+          </button>
         </div>
 
         <nav aria-label="Categorias" className="border-t border-line">
           <ul className="container-page no-scrollbar flex gap-1 overflow-x-auto py-2 lg:justify-center lg:gap-2">
-            {navLinks.map((l) => (
-              <li key={l.label}>
-                <Link href="#" className="block rounded-full px-3.5 py-2 text-sm font-medium whitespace-nowrap text-petrol transition hover:bg-petrol-soft">
-                  {l.label}
+            {links.map((l) => (
+              <li key={l.slug}>
+                <Link href={`/categoria/${l.slug}`} className="block rounded-full px-3.5 py-2 text-sm font-medium whitespace-nowrap text-petrol transition hover:bg-petrol-soft">
+                  {l.name}
                 </Link>
               </li>
             ))}
             <li>
-              <Link href="#ofertas" className="flex items-center gap-1 rounded-full bg-brand-soft px-3.5 py-2 text-sm font-bold whitespace-nowrap text-brand-dark">
+              <Link href="/categoria/promocoes" className="flex items-center gap-1 rounded-full bg-brand-soft px-3.5 py-2 text-sm font-bold whitespace-nowrap text-brand-dark">
                 <Flame className="size-4" /> Promoções
               </Link>
             </li>
@@ -86,37 +79,57 @@ export function Header() {
 
       {/* Menu lateral mobile com <dialog> nativo: foco preso, Esc para fechar e backdrop de graça */}
       <dialog
-        ref={drawer}
-        onClick={(e) => e.target === e.currentTarget && close()}
+        ref={menu}
+        aria-label="Menu"
+        onClick={(e) => {
+          const el = e.target as HTMLElement;
+          if (e.target === e.currentTarget || el.closest("a")) close();
+        }}
         className="drawer m-0 h-dvh max-h-none w-[min(84vw,320px)] bg-white p-0 backdrop:bg-petrol-dark/50 backdrop:backdrop-blur-sm"
       >
-        <div className="flex h-full flex-col p-5">
+        <div className="flex h-full flex-col overflow-y-auto p-5">
           <div className="mb-4 flex items-center justify-between">
             <Logo />
             <button type="button" aria-label="Fechar menu" onClick={close} className="icon-btn">
               <X className="size-6" />
             </button>
           </div>
-          <Link href="#" onClick={close} className="btn btn-petrol mb-3 h-12 w-full">
-            <User className="size-5" /> Entrar / Cadastrar
-          </Link>
+          {drawerAccount}
           <ul>
-            {navLinks.map((l) => (
-              <li key={l.label}>
-                <Link href="#" onClick={close} className="flex items-center gap-3 border-b border-line px-2 py-3.5 font-semibold text-petrol">
+            {links.map((l) => (
+              <li key={l.slug}>
+                <Link href={`/categoria/${l.slug}`} className="flex items-center gap-3 border-b border-line px-2 py-3.5 font-semibold text-petrol">
                   <span className="text-xl">{l.emoji}</span>
-                  {l.label}
+                  {l.name}
                 </Link>
               </li>
             ))}
             <li>
-              <Link href="#ofertas" onClick={close} className="flex items-center gap-3 px-2 py-3.5 font-semibold text-brand-dark">
+              <Link href="/categoria/promocoes" className="flex items-center gap-3 border-b border-line px-2 py-3.5 font-semibold text-brand-dark">
                 <span className="text-xl">🔥</span> Promoções
+              </Link>
+            </li>
+            <li>
+              <Link href="/ajuda/fale-conosco" className="flex items-center gap-3 px-2 py-3.5 font-semibold text-petrol">
+                <span className="text-xl">💬</span> Atendimento
               </Link>
             </li>
           </ul>
         </div>
       </dialog>
     </>
+  );
+}
+
+/** Placeholder enquanto a sessão é lida (mesmo tamanho do link final, sem salto de layout). */
+export function AccountFallback() {
+  return (
+    <span className="icon-btn gap-2 lg:w-auto lg:px-2.5" aria-hidden="true">
+      <User className="size-6" />
+      <span className="hidden text-left text-xs leading-tight lg:block">
+        Olá!
+        <b className="block">Minha conta</b>
+      </span>
+    </span>
   );
 }
