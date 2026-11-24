@@ -85,9 +85,9 @@ export function ZoneEditor({ zone, nextSort }: { zone?: DeliveryZone; nextSort?:
   return (
     <form onSubmit={onSubmit} noValidate className="grid gap-3 sm:grid-cols-4">
       {zone && <input type="hidden" name="id" value={zone.id} />}
-      <Field id={`zname-${uid}`} className="sm:col-span-3" label="Nome da região" name="name" required defaultValue={zone?.name} error={e.name} placeholder="Ex.: Zona rural – rota de terça" />
+      <Field id={`zname-${uid}`} className="sm:col-span-3" label="Nome da região" name="name" required defaultValue={zone?.name} error={e.name} placeholder="Ex.: Zona norte – entrega às terças" />
       <Field id={`zsort-${uid}`} label="Ordem" name="sort" type="number" min={0} defaultValue={zone?.sort ?? nextSort ?? 0} />
-      <Field id={`zareas-${uid}`} className="sm:col-span-4" label="Bairros e localidades atendidos" name="areas" defaultValue={zone?.areas} placeholder="Ex.: Canguera, Mailasqui e sítios da região" />
+      <Field id={`zareas-${uid}`} className="sm:col-span-4" label="Bairros e localidades atendidos" name="areas" defaultValue={zone?.areas} placeholder="Ex.: Mailasqui, Canguera e São João Novo" />
       <Field id={`zfee-${uid}`} label="Taxa (R$)" name="fee" inputMode="decimal" required defaultValue={money(zone?.fee ?? 0)} error={e.fee} hint="0 = grátis" />
       <Field id={`zfree-${uid}`} label="Grátis acima de (R$)" name="freeAbove" inputMode="decimal" defaultValue={money(zone?.freeAbove)} error={e.freeAbove} hint="Opcional" />
       <div className="sm:col-span-2">

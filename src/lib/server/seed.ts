@@ -57,8 +57,8 @@ const products: SeedProduct[] = [
 
 const zones = [
   { name: "Centro e bairros próximos", areas: "Centro, Vila Aguiar, Jardim Brasília e região", fee: 8, freeAbove: 150, days: [1, 2, 3, 4, 5, 6] },
-  { name: "Zona rural – rota de terça", areas: "Canguera, Mailasqui e sítios da região", fee: 15, freeAbove: 300, days: [2] },
-  { name: "Zona rural – rota de quinta", areas: "São João Novo, Saboó e sítios da região", fee: 15, freeAbove: 300, days: [4] },
+  { name: "Zona norte – entrega às terças", areas: "Mailasqui, Canguera e bairros vizinhos", fee: 15, freeAbove: 300, days: [2] },
+  { name: "Zona sul – entrega às quintas", areas: "São João Novo, Saboó e bairros vizinhos", fee: 15, freeAbove: 300, days: [4] },
 ];
 
 export function seedDemoData(conn: DatabaseSync) {

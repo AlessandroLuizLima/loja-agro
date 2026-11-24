@@ -56,7 +56,7 @@ const schema = z
   .superRefine((d, ctx) => {
     if (d.fulfillment === "entrega") {
       if (!d.zoneId) ctx.addIssue({ code: "custom", path: ["zoneId"], message: "Escolha sua região de entrega." });
-      if (d.street.length < 3) ctx.addIssue({ code: "custom", path: ["street"], message: "Informe a rua, estrada ou sítio." });
+      if (d.street.length < 3) ctx.addIssue({ code: "custom", path: ["street"], message: "Informe a rua." });
       if (d.district.length < 2) ctx.addIssue({ code: "custom", path: ["district"], message: "Informe o bairro ou localidade." });
     }
     if (d.payment === "na_entrega" && !d.onDelivery) ctx.addIssue({ code: "custom", path: ["onDelivery"], message: "Como vai pagar?" });

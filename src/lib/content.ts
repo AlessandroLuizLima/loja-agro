@@ -32,7 +32,7 @@ export function infoPages(s: Settings, zones: DeliveryZone[]): InfoPage[] {
           heading: "2. Escolha como receber",
           body: [
             s.pickupEnabled ? `Retire na loja (${fullAddress}) no dia que preferir: ${daysSummary(s.pickupDays)}. ${s.pickupNote}` : "",
-            zones.length > 0 ? "Ou receba em casa ou no sítio, no dia de entrega da sua região." : "",
+            zones.length > 0 ? "Ou receba na sua casa, no dia de entrega do seu bairro." : "",
           ].filter(Boolean),
         },
         {

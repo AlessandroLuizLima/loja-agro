@@ -154,7 +154,7 @@ export function CheckoutForm({ config, user }: { config: CheckoutConfig; user: {
               <Choice name="fulfillment-choice" checked={f.fulfillment === "entrega"} onChange={() => update({ fulfillment: "entrega" })}>
                 <Truck className="size-5 shrink-0 text-petrol" />
                 <span>
-                  <b className="block text-petrol">Receber em casa ou no sítio</b>
+                  <b className="block text-petrol">Receber em casa</b>
                   <span className="text-xs text-muted">Taxa conforme a região</span>
                 </span>
               </Choice>
@@ -201,7 +201,7 @@ export function CheckoutForm({ config, user }: { config: CheckoutConfig; user: {
               {!zone && <input type="hidden" name="deliveryDate" value="" />}
 
               <div className="grid gap-4 sm:grid-cols-6">
-                <FormField className="sm:col-span-4" label="Rua, estrada ou sítio" name="street" autoComplete="address-line1" required value={f.street} onChange={set("street")} error={errors.street} />
+                <FormField className="sm:col-span-4" label="Rua" name="street" autoComplete="address-line1" required value={f.street} onChange={set("street")} error={errors.street} />
                 <FormField className="sm:col-span-2" label="Número / km" name="number" placeholder="s/n" value={f.number} onChange={set("number")} />
                 <FormField className="sm:col-span-6" label="Bairro ou localidade" name="district" required value={f.district} onChange={set("district")} error={errors.district} />
                 <FormField className="sm:col-span-6" label="Ponto de referência" name="reference" placeholder="Ex.: porteira azul depois da capela" value={f.reference} onChange={set("reference")} />

@@ -22,7 +22,7 @@ export default async function DeliveryPage() {
         </Card>
 
         <h2 className="pt-2 font-display text-lg font-bold text-petrol">Regiões de entrega</h2>
-        <p className="-mt-3 text-sm text-muted">Monte uma região para cada rota. Ex.: “Centro” todos os dias e “Zona rural” só às terças. O cliente vê as próximas datas disponíveis.</p>
+        <p className="-mt-3 text-sm text-muted">Monte uma região para cada rota. Ex.: “Centro” todos os dias e “Bairros da zona norte” só às terças. O cliente vê as próximas datas disponíveis.</p>
         {zones.map((z) => (
           <Card key={z.id}>
             <ZoneEditor zone={z} />

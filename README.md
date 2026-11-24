@@ -1,6 +1,6 @@
 # 🌱 Loja Agro: loja virtual para agropecuárias
 
-Loja virtual com **painel do lojista** pensada para agropecuárias e pet shops de cidade do interior. O cliente vê **preço e estoque na hora**, **reserva pelo site** e escolhe **retirar na loja** ou **receber em casa/no sítio** no dia da rota da região dele. Sem precisar mandar mensagem e esperar resposta.
+Loja virtual com **painel do lojista** pensada para agropecuárias e pet shops de cidade do interior. O cliente vê **preço e estoque na hora**, **reserva pelo site** e escolhe **retirar na loja** ou **receber em casa** no dia de entrega do bairro dele. Sem precisar mandar mensagem e esperar resposta.
 
 Feita com **Next.js 16**, **React 19**, **TypeScript**, **Tailwind CSS v4** e **SQLite** (embutido no Node, sem servidor de banco).
 
@@ -18,7 +18,7 @@ Feita com **Next.js 16**, **React 19**, **TypeScript**, **Tailwind CSS v4** e **
 | **Sem estoque** | Botão "Avise-me quando chegar" no WhatsApp, em vez de perder a venda |
 | **Carrinho** | Salvo no celular, com preço e estoque atualizados pelo servidor ao abrir |
 | **Retirada na loja** | Cliente escolhe o dia (hoje, amanhã…) entre os dias em que a loja abre |
-| **Entrega por região** | Cada região tem taxa, valor para frete grátis e dias de rota (ex.: zona rural só às terças) |
+| **Entrega por região** | Cada região tem taxa, valor para frete grátis e dias de rota (ex.: zona norte só às terças) |
 | **Pagamento** | Pix pelo site com QR Code (desconto opcional) ou pagar na retirada/entrega (dinheiro com troco, cartão ou Pix) |
 | **Confirmação** | Página do pedido com QR Pix e botão que manda o resumo pronto para o WhatsApp da loja |
 | **Conta** (opcional) | Cadastro, login e histórico de pedidos. Também dá para comprar sem cadastro |
