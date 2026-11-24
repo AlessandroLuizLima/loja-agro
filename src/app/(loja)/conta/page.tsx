@@ -1,7 +1,8 @@
-import { LayoutDashboard, LogOut, Package } from "lucide-react";
+import { Download, LayoutDashboard, LogOut, Package, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
+import { DeleteAccount } from "@/components/auth/delete-account";
 import { OrderStatusBadge } from "@/components/order-status-badge";
 import { ProductImage } from "@/components/product-image";
 import { longDate } from "@/lib/dates";
@@ -46,6 +47,24 @@ export default async function AccountPage() {
               <LogOut className="size-4" /> Sair
             </button>
           </form>
+
+          {user.role !== "admin" && (
+            <div className="mt-6 border-t border-line pt-5">
+              <p className="mb-1 flex items-center gap-2 text-sm font-semibold text-petrol">
+                <ShieldCheck className="size-4 text-brand" /> Seus dados
+              </p>
+              <p className="mb-3 text-xs text-muted">
+                Pela LGPD, você pode baixar ou excluir seus dados a qualquer momento.{" "}
+                <Link href="/ajuda/politica-de-privacidade" className="underline">
+                  Saiba mais
+                </Link>
+              </p>
+              <a href="/conta/meus-dados" download className="btn h-11 w-full border-2 border-line text-sm text-petrol hover:border-brand">
+                <Download className="size-4" /> Baixar meus dados
+              </a>
+              <DeleteAccount />
+            </div>
+          )}
         </aside>
 
         <section className="rounded-3xl bg-white p-6 shadow-card">
