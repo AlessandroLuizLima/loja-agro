@@ -1,25 +1,35 @@
+import { MessageCircle } from "lucide-react";
 import Link from "next/link";
-import type { Product } from "@/lib/catalog";
 import { brl, discountPercent } from "@/lib/format";
-import { maxInstallments, PIX_DISCOUNT } from "@/lib/pricing";
+import { toSnapshot, type Product } from "@/lib/types";
+import { waLink } from "@/lib/whatsapp";
 import { AddToCartButton } from "./add-to-cart-button";
-import { FavoriteButton } from "./favorite-button";
-import { Rating } from "./rating";
+import { ProductImage } from "./product-image";
 
-export function ProductCard({ product, top = false }: { product: Product; top?: boolean }) {
+/** Informações da loja que os cards precisam: WhatsApp para consultas e desconto do Pix. */
+export type StoreInfo = { whatsapp: string; pixPercent: number };
+
+export function stockText(p: Pick<Product, "stock" | "saleMode">) {
+  if (p.saleMode === "consulta") return { text: "Sob consulta", tone: "text-petrol" };
+  if (p.stock <= 0) return { text: "Sem estoque no momento", tone: "text-red-600" };
+  if (p.stock === 1) return { text: "Última unidade", tone: "text-brand-dark" };
+  if (p.stock <= 5) return { text: `Últimas ${p.stock} unidades`, tone: "text-brand-dark" };
+  return { text: `${p.stock} em estoque`, tone: "text-emerald-700" };
+}
+
+export function ProductCard({ product, store }: { product: Product; store: StoreInfo }) {
   const off = discountPercent(product.price, product.oldPrice);
   const href = `/produto/${product.slug}`;
-  const n = maxInstallments(product.price);
+  const consulta = product.saleMode === "consulta";
+  const available = !consulta && product.stock > 0;
+  const stock = stockText(product);
 
   return (
     <article className="reveal group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-card transition duration-300 hover:-translate-y-1 hover:shadow-lift">
-      <div className={`relative grid aspect-square place-items-center ${product.tint}`}>
-        {top ? <span className="badge bg-sun text-petrol">⭐ Top</span> : off > 0 && <span className="badge bg-red-500 text-white">-{off}%</span>}
-        <FavoriteButton name={product.name} />
-        <Link href={href} tabIndex={-1} aria-hidden="true" className="grid size-full place-items-center text-6xl transition duration-300 group-hover:scale-110 lg:text-7xl">
-          {product.emoji}
-        </Link>
-      </div>
+      <Link href={href} tabIndex={-1} aria-hidden="true" className="relative block">
+        {off > 0 && <span className="badge bg-red-500 text-white">-{off}%</span>}
+        <ProductImage item={product} className="aspect-square transition duration-300 group-hover:scale-105" emojiClassName="text-6xl lg:text-7xl" />
+      </Link>
 
       <div className="flex flex-1 flex-col gap-1.5 p-3 lg:p-4">
         <h3 className="line-clamp-2 min-h-[2.7em] text-sm leading-snug font-medium text-ink lg:text-[0.95rem]">
@@ -27,21 +37,29 @@ export function ProductCard({ product, top = false }: { product: Product; top?: 
             {product.name}
           </Link>
         </h3>
+        <p className="text-xs text-muted">{product.unit}</p>
 
-        <Rating value={product.rating} count={product.reviews} />
+        {!consulta && (
+          <div>
+            {off > 0 && <p className="text-xs text-muted line-through">{brl(product.oldPrice!)}</p>}
+            <p className="font-display text-xl font-bold text-petrol">{brl(product.price)}</p>
+            {store.pixPercent > 0 && <p className="text-xs font-semibold text-emerald-700">{brl(product.price * (1 - store.pixPercent / 100))} no Pix</p>}
+          </div>
+        )}
+        <p className={`text-xs font-semibold ${stock.tone}`}>{stock.text}</p>
 
-        <div>
-          {product.oldPrice && <p className="text-xs text-muted line-through">{brl(product.oldPrice)}</p>}
-          <p className="font-display text-xl font-bold text-petrol">{brl(product.price)}</p>
-          <p className="text-xs font-semibold text-emerald-600">{brl(product.price * (1 - PIX_DISCOUNT))} no Pix</p>
-          {n > 1 && (
-            <p className="text-xs text-muted">
-              ou {n}x de {brl(product.price / n)} sem juros
-            </p>
-          )}
-        </div>
-
-        <AddToCartButton slug={product.slug} disabled={product.stock === 0} />
+        {available ? (
+          <AddToCartButton product={toSnapshot(product)} />
+        ) : (
+          <a
+            href={waLink(store.whatsapp, consulta ? `Olá! Quero saber sobre: ${product.name}` : `Olá! Vocês vão ter de novo: ${product.name}?`)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn mt-auto h-11 w-full border-2 border-[#25D366] px-3 text-sm text-[#128C7E] hover:bg-[#25D366]/10"
+          >
+            <MessageCircle className="size-4" /> {consulta ? "Consultar" : "Avisar quando chegar"}
+          </a>
+        )}
       </div>
     </article>
   );
