@@ -7,11 +7,17 @@ import type { DeliveryZone, Settings } from "./types";
  * Textos-modelo: o lojista deve revisá-los (de preferência com um advogado) antes de publicar.
  */
 
+/** Data da versão atual da Política de Privacidade (atualize ao mudar o texto). */
+export const PRIVACY_UPDATED = "24/11/2026";
+
 export type InfoPage = { slug: string; title: string; group: "institucional" | "politicas"; intro: string; sections: { heading: string; body: string[] }[] };
 
 export function infoPages(s: Settings, zones: DeliveryZone[]): InfoPage[] {
   const phone = formatPhone(s.whatsapp);
   const fullAddress = `${s.address}, ${s.city} – ${s.state}`;
+  const dpo = s.dpoName || `a própria ${s.storeName}`;
+  const privacyEmail = s.dpoEmail || s.email;
+  const privacyContact = privacyEmail ? `${privacyEmail} ou WhatsApp ${phone}` : `WhatsApp ${phone}`;
 
   return [
     {
@@ -88,11 +94,68 @@ export function infoPages(s: Settings, zones: DeliveryZone[]): InfoPage[] {
       slug: "politica-de-privacidade",
       title: "Política de privacidade",
       group: "politicas",
-      intro: "Tratamos seus dados de acordo com a Lei Geral de Proteção de Dados (LGPD – Lei 13.709/2018).",
+      intro: `Como a ${s.storeName} trata os seus dados pessoais, de acordo com a Lei Geral de Proteção de Dados (LGPD – Lei 13.709/2018). Atualizada em ${PRIVACY_UPDATED}.`,
       sections: [
-        { heading: "Dados que coletamos", body: ["Nome, telefone, e-mail e endereço de entrega, usados só para separar, entregar e combinar seus pedidos."] },
-        { heading: "Pagamentos", body: ["Não pedimos nem guardamos dados de cartão no site. O Pix é pago direto no aplicativo do seu banco."] },
-        { heading: "Seus direitos", body: [`Você pode pedir acesso, correção ou exclusão dos seus dados pelo WhatsApp ${phone}${s.email ? ` ou pelo e-mail ${s.email}` : ""}.`] },
+        {
+          heading: "Quem cuida dos seus dados",
+          body: [
+            `A controladora dos dados é ${s.legalName || s.storeName}${s.cnpj ? `, CNPJ ${s.cnpj}` : ""}, com endereço em ${fullAddress}.`,
+            `Encarregado pelo tratamento de dados: ${dpo}. Contato: ${privacyContact}.`,
+          ],
+        },
+        {
+          heading: "Quais dados coletamos",
+          body: [
+            "No pedido: nome, celular, e-mail (opcional), endereço de entrega (só se você escolher receber em casa) e observações que você escrever.",
+            "Se criar uma conta: nome, e-mail, celular e senha. A senha é guardada de forma embaralhada (criptografia de mão única): nem a loja consegue lê-la.",
+            "Para segurança: o endereço IP das tentativas de login, para bloquear quem tenta adivinhar senhas.",
+            "Não pedimos nem guardamos dados de cartão. O Pix é pago direto no aplicativo do seu banco.",
+          ],
+        },
+        {
+          heading: "Para que usamos",
+          body: [
+            "Para separar, entregar e combinar o seu pedido, e para avisar você sobre ele pelo WhatsApp (execução do contrato de compra, art. 7º, V, da LGPD).",
+            "Para manter o site e a sua conta seguros (legítimo interesse, art. 7º, IX) e cumprir obrigações legais, como as fiscais (art. 7º, II).",
+            "Não usamos seus dados para propaganda e não vendemos nem alugamos seus dados para ninguém.",
+          ],
+        },
+        {
+          heading: "Com quem compartilhamos",
+          body: [
+            "Com ninguém, a não ser quando necessário para atender você: a empresa que hospeda o site (os dados ficam guardados no servidor dela) e o WhatsApp, quando você ou a loja iniciam uma conversa por ele.",
+            "Também podemos fornecer dados quando a lei ou uma autoridade exigir.",
+          ],
+        },
+        {
+          heading: "Por quanto tempo guardamos",
+          body: [
+            `Os dados pessoais de pedidos concluídos ou cancelados são apagados automaticamente ${s.retentionMonths} meses depois. O pedido continua registrado (produtos, valores e datas), sem nada que identifique você.`,
+            "Os dados da conta ficam enquanto ela existir. Você pode excluí-la quando quiser.",
+            "Os registros de acesso ao painel da loja são guardados por 12 meses.",
+          ],
+        },
+        {
+          heading: "Cookies",
+          body: [
+            "Usamos só um cookie essencial, para manter você conectado na sua conta, e guardamos o carrinho no seu próprio aparelho. Não usamos cookies de propaganda nem de rastreamento.",
+          ],
+        },
+        {
+          heading: "Como protegemos",
+          body: [
+            "Conexão criptografada (HTTPS), senhas embaralhadas, acesso ao painel da loja só com senha forte, bloqueio após várias tentativas erradas e registro de quem acessou e alterou dados.",
+          ],
+        },
+        {
+          heading: "Seus direitos",
+          body: [
+            "Você pode, a qualquer momento: confirmar se tratamos seus dados, ter acesso a eles, corrigi-los, pedir a exclusão, receber uma cópia (portabilidade) e saber com quem foram compartilhados (art. 18 da LGPD).",
+            "Se tem conta: em Minha conta você baixa seus dados e exclui a conta sozinho, na hora.",
+            `Se comprou sem cadastro, ou para qualquer outro pedido: fale com o encarregado em ${privacyContact}. Respondemos em até 15 dias.`,
+            "Se não ficar satisfeito, você pode reclamar na Autoridade Nacional de Proteção de Dados (ANPD), em gov.br/anpd.",
+          ],
+        },
       ],
     },
     {
