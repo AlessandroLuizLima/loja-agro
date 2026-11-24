@@ -17,7 +17,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const newOrders = countOrdersByStatus().novo ?? 0;
 
   return (
-    <div className="min-h-dvh bg-[#f5f3ee] lg:grid lg:grid-cols-[240px_1fr] print:block print:bg-white">
+    <div className="min-h-dvh bg-[#f5f3ee] lg:grid lg:grid-cols-[240px_minmax(0,1fr)] print:block print:bg-white">
       <aside className="sticky top-0 z-30 bg-petrol-dark text-white lg:h-dvh lg:overflow-y-auto print:hidden">
         <div className="flex items-center justify-between gap-3 px-4 pt-3 lg:block lg:px-4 lg:pt-6">
           <div className="min-w-0">
@@ -40,7 +40,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
         </div>
         <p className="hidden px-4 pt-6 pb-4 text-xs text-white/50 lg:block">Logado como {admin.email}</p>
       </aside>
-      <main className="mx-auto w-full max-w-6xl p-4 pb-16 lg:p-8">{children}</main>
+      <main className="mx-auto w-full max-w-6xl min-w-0 p-4 pb-16 lg:p-8">{children}</main>
     </div>
   );
 }
