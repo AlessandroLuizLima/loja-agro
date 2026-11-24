@@ -23,7 +23,7 @@ Feita com **Next.js 16**, **React 19**, **TypeScript**, **Tailwind CSS v4** e **
 | **Confirmação** | Página do pedido com QR Pix e botão que manda o resumo pronto para o WhatsApp da loja |
 | **Conta** (opcional) | Cadastro, login e histórico de pedidos. Também dá para comprar sem cadastro |
 
-### Para o lojista (`/admin`)
+### Para o lojista (painel)
 
 | | |
 | --- | --- |
@@ -39,10 +39,14 @@ Feita com **Next.js 16**, **React 19**, **TypeScript**, **Tailwind CSS v4** e **
 
 ### Segurança
 
-O painel fica em `/admin`, mas **só abre com login de administrador**: sem login, qualquer página do painel leva para a tela de entrada, e toda ação (salvar produto, mudar pedido, trocar configurações) confere no servidor se quem está logado é administrador. Esconder o endereço não protege nada (robôs testam `/admin`, `/wp-admin` etc. em qualquer site); a proteção é a senha e as camadas abaixo.
+O painel **só abre com login de administrador**: sem login, qualquer página do painel leva para a tela de entrada, e toda ação (salvar produto, mudar pedido, trocar configurações) confere no servidor se quem está logado é administrador.
+
+Em produção, cada loja usa um **endereço secreto** para o painel (`ADMIN_PATH`), e `/admin` responde "página não encontrada". O endereço não fica no código nem neste README: cada lojista recebe o seu junto com a senha inicial.
 
 | Proteção | Como funciona |
 | --- | --- |
+| **Endereço secreto** | Robôs que testam `/admin`, `/wp-admin` etc. nem encontram a tela de login. O login de cliente (`/conta/entrar`) não aceita contas de administrador, então ninguém consegue tentar senhas do painel (nem trancar o lojista para fora) pela loja |
+| **Verificação em duas etapas** | Opcional (recomendada), ativada em Configurações: além da senha, um código de 6 números do Google Authenticator, Microsoft Authenticator ou Authy. 8 códigos de recuperação para o caso de perder o celular. O segredo fica criptografado no banco (AES-256-GCM) |
 | **Senha forte no painel** | Mínimo de 10 caracteres com maiúsculas, minúsculas e números. A senha inicial (das variáveis de ambiente) **precisa ser trocada no primeiro acesso** |
 | **Bloqueio de tentativas** | 5 senhas erradas na mesma conta (ou 20 no mesmo IP) bloqueiam o login por 15 minutos |
 | **Sessão** | Cookie `httpOnly` assinado (HMAC). Painel desconecta em 12 horas. Trocar a senha derruba as sessões de outros aparelhos |
@@ -83,7 +87,7 @@ npm run dev
 ```
 
 - Loja: http://localhost:3000
-- Painel: http://localhost:3000/admin (e-mail e senha do `.env.local`)
+- Painel: http://localhost:3000/admin (e-mail e senha do `.env.local`; com `ADMIN_PATH` preenchido, o endereço muda)
 
 O banco é criado sozinho em `data/loja.db` no primeiro acesso, com produtos de demonstração. Para começar do zero, apague a pasta `data/`.
 
@@ -98,7 +102,7 @@ O mesmo código atende quantas agropecuárias você quiser. Cada cliente tem **a
 | Nome, logo, cores, textos, WhatsApp, endereço, Pix | **Painel > Configurações** (o próprio lojista pode mudar) |
 | Produtos, categorias, entregas, cupons | Painel |
 | Domínio (www.loja.com.br) | Registro do domínio + 1 linha no `deploy/Caddyfile` |
-| E-mail/senha inicial do painel, segredo da sessão | Variáveis de ambiente (`deploy/.env`) |
+| E-mail/senha inicial do painel, endereço secreto do painel, segredo da sessão | Variáveis de ambiente (`deploy/.env`) |
 
 ### Colocar no ar (VPS com Docker)
 
@@ -108,7 +112,9 @@ Uma VPS simples (2 GB de RAM, a partir de ~R$ 30/mês em Hostinger, Contabo, Dig
 2. **No servidor:** instale o Docker, clone este repositório e entre em `deploy/`.
 3. Copie `deploy/.env.example` para `deploy/.env` e preencha domínio, segredo e e-mail/senha inicial de cada loja.
 4. `docker compose up -d --build`
-5. Em alguns minutos cada domínio abre com **HTTPS automático**. O lojista entra em `https://dominio/admin` com a senha inicial, é obrigado a criar uma senha própria e configura a loja.
+5. Em alguns minutos cada domínio abre com **HTTPS automático**. O lojista entra em `https://dominio/<ADMIN_PATH>` com a senha inicial, é obrigado a criar uma senha própria, ativa a verificação em duas etapas e configura a loja.
+
+**Lojista perdeu o celular e os códigos de recuperação:** coloque o e-mail dele em `LOJA_X_ADMIN_DISABLE_2FA` no `deploy/.env`, rode `docker compose up -d`, peça para ele entrar e ativar de novo, e apague a variável.
 
 Para a 3ª loja: copie um bloco `loja-...` no `docker-compose.yml`, um bloco no `Caddyfile` e as variáveis no `.env`.
 

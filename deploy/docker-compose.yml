@@ -22,6 +22,8 @@ services:
       SESSION_SECRET: ${LOJA_A_SESSION_SECRET:?defina LOJA_A_SESSION_SECRET no .env}
       ADMIN_EMAIL: ${LOJA_A_ADMIN_EMAIL}
       ADMIN_PASSWORD: ${LOJA_A_ADMIN_PASSWORD}
+      ADMIN_PATH: ${LOJA_A_ADMIN_PATH:-}
+      ADMIN_DISABLE_2FA: ${LOJA_A_ADMIN_DISABLE_2FA:-}
     volumes:
       - loja-a-dados:/data
 
@@ -33,6 +35,8 @@ services:
       SESSION_SECRET: ${LOJA_B_SESSION_SECRET:?defina LOJA_B_SESSION_SECRET no .env}
       ADMIN_EMAIL: ${LOJA_B_ADMIN_EMAIL}
       ADMIN_PASSWORD: ${LOJA_B_ADMIN_PASSWORD}
+      ADMIN_PATH: ${LOJA_B_ADMIN_PATH:-}
+      ADMIN_DISABLE_2FA: ${LOJA_B_ADMIN_DISABLE_2FA:-}
     volumes:
       - loja-b-dados:/data
 
