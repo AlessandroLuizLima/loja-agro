@@ -1,46 +1,41 @@
 "use client";
 
 import { createContext, use, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { getProduct } from "@/lib/catalog";
-import { MAX_QTY_PER_ITEM, type CartItem } from "@/lib/pricing";
+import { refreshCart } from "@/app/(loja)/cart-actions";
+import { MAX_QTY_PER_ITEM } from "@/lib/pricing";
+import type { CartItem, CartSnapshot, CouponInfo } from "@/lib/types";
 import { CartDrawer } from "./cart-drawer";
 
-type CartState = { items: CartItem[]; coupon: string | null };
+type CartState = { items: CartItem[]; coupon: CouponInfo | null };
 
 type CartContextValue = CartState & {
   /** false até ler o carrinho salvo no navegador (evita piscar "carrinho vazio") */
   ready: boolean;
   count: number;
-  add: (slug: string, qty?: number, opts?: { openDrawer?: boolean }) => void;
+  add: (product: CartSnapshot, qty?: number, opts?: { openDrawer?: boolean }) => void;
   setQty: (slug: string, qty: number) => void;
   remove: (slug: string) => void;
   clear: () => void;
-  setCoupon: (code: string | null) => void;
+  setCoupon: (coupon: CouponInfo | null) => void;
   openDrawer: () => void;
   closeDrawer: () => void;
 };
 
-const STORAGE_KEY = "pethouse:cart:v1";
+const STORAGE_KEY = "loja:carrinho:v2";
 const empty: CartState = { items: [], coupon: null };
 
 const CartContext = createContext<CartContextValue | null>(null);
 
-function clampQty(slug: string, qty: number) {
-  const stock = getProduct(slug)?.stock ?? MAX_QTY_PER_ITEM;
-  return Math.max(0, Math.min(Math.floor(qty), MAX_QTY_PER_ITEM, stock));
-}
+const clampQty = (qty: number, stock: number) => Math.max(0, Math.min(Math.floor(qty), MAX_QTY_PER_ITEM, stock));
 
 function readStorage(): CartState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return empty;
-    const parsed = JSON.parse(raw) as CartState;
-    return {
-      coupon: typeof parsed.coupon === "string" ? parsed.coupon : null,
-      items: Array.isArray(parsed.items)
-        ? parsed.items.filter((i) => getProduct(i.slug) && i.qty > 0).map((i) => ({ slug: i.slug, qty: clampQty(i.slug, i.qty) }))
-        : [],
-    };
+    const parsed = JSON.parse(raw) as Partial<CartState>;
+    const items = Array.isArray(parsed.items) ? parsed.items.filter((i) => typeof i?.slug === "string" && typeof i.price === "number" && i.qty > 0) : [];
+    const coupon = parsed.coupon && typeof parsed.coupon.code === "string" ? parsed.coupon : null;
+    return { items, coupon };
   } catch {
     return empty;
   }
@@ -51,11 +46,29 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const drawer = useRef<HTMLDialogElement>(null);
 
-  // Carrega do navegador e sincroniza entre abas
+  // Carrega do navegador, atualiza preço/estoque com o servidor e sincroniza entre abas
   useEffect(() => {
+    const saved = readStorage();
     // eslint-disable-next-line react-hooks/set-state-in-effect -- leitura única do localStorage após a hidratação
-    setState(readStorage());
+    setState(saved);
     setReady(true);
+    if (saved.items.length > 0) {
+      refreshCart(saved.items.map((i) => i.slug))
+        .then((fresh) => {
+          const bySlug = new Map(fresh.map((p) => [p.slug, p]));
+          setState((s) => ({
+            ...s,
+            items: s.items.flatMap((i) => {
+              const p = bySlug.get(i.slug);
+              const qty = p ? clampQty(i.qty, p.stock) : 0;
+              return p && qty > 0 ? [{ ...p, qty }] : [];
+            }),
+          }));
+        })
+        .catch(() => {
+          /* sem conexão: segue com a cópia salva; o checkout confere tudo no servidor */
+        });
+    }
     const onStorage = (e: StorageEvent) => e.key === STORAGE_KEY && setState(readStorage());
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
@@ -73,12 +86,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const openDrawer = useCallback(() => drawer.current?.showModal(), []);
   const closeDrawer = useCallback(() => drawer.current?.close(), []);
 
-  const add = useCallback<CartContextValue["add"]>((slug, qty = 1, opts) => {
+  const add = useCallback<CartContextValue["add"]>((product, qty = 1, opts) => {
     setState((s) => {
-      const existing = s.items.find((i) => i.slug === slug);
-      const items = existing
-        ? s.items.map((i) => (i.slug === slug ? { ...i, qty: clampQty(slug, i.qty + qty) } : i))
-        : [...s.items, { slug, qty: clampQty(slug, qty) }];
+      const existing = s.items.find((i) => i.slug === product.slug);
+      const nextQty = clampQty((existing?.qty ?? 0) + qty, product.stock);
+      if (nextQty === 0) return s;
+      const items = existing ? s.items.map((i) => (i.slug === product.slug ? { ...product, qty: nextQty } : i)) : [...s.items, { ...product, qty: nextQty }];
       return { ...s, items };
     });
     if (opts?.openDrawer !== false) drawer.current?.showModal();
@@ -87,13 +100,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const setQty = useCallback((slug: string, qty: number) => {
     setState((s) => ({
       ...s,
-      items: qty <= 0 ? s.items.filter((i) => i.slug !== slug) : s.items.map((i) => (i.slug === slug ? { ...i, qty: clampQty(slug, qty) } : i)),
+      items: qty <= 0 ? s.items.filter((i) => i.slug !== slug) : s.items.map((i) => (i.slug === slug ? { ...i, qty: clampQty(qty, i.stock) || 1 } : i)),
     }));
   }, []);
 
   const remove = useCallback((slug: string) => setState((s) => ({ ...s, items: s.items.filter((i) => i.slug !== slug) })), []);
   const clear = useCallback(() => setState(empty), []);
-  const setCoupon = useCallback((coupon: string | null) => setState((s) => ({ ...s, coupon })), []);
+  const setCoupon = useCallback((coupon: CouponInfo | null) => setState((s) => ({ ...s, coupon })), []);
 
   const value = useMemo<CartContextValue>(
     () => ({

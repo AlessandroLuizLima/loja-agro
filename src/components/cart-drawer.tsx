@@ -1,17 +1,16 @@
 "use client";
 
-import { ShoppingBag, X } from "lucide-react";
+import { ShoppingBag, Store, Truck, X } from "lucide-react";
 import Link from "next/link";
 import type { Ref } from "react";
 import { brl } from "@/lib/format";
 import { computeTotals } from "@/lib/pricing";
 import { useCart } from "./cart-provider";
 import { CartLine } from "./cart-line";
-import { FreeShippingBar } from "./free-shipping-bar";
 
 export function CartDrawer({ ref }: { ref: Ref<HTMLDialogElement> }) {
   const { items, coupon, closeDrawer } = useCart();
-  const totals = computeTotals({ items, couponCode: coupon });
+  const totals = computeTotals({ lines: items, coupon });
 
   return (
     <dialog
@@ -30,38 +29,42 @@ export function CartDrawer({ ref }: { ref: Ref<HTMLDialogElement> }) {
           </button>
         </div>
 
-        {totals.lines.length === 0 ? (
+        {items.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
-            <span className="text-6xl" aria-hidden="true">🐾</span>
+            <span className="text-6xl" aria-hidden="true">
+              🧺
+            </span>
             <p className="font-display font-semibold text-petrol">Seu carrinho está vazio</p>
-            <p className="text-sm text-muted">Que tal dar uma olhada nas ofertas da semana?</p>
-            <Link href="/categoria/promocoes" onClick={closeDrawer} className="btn btn-primary mt-2">
+            <p className="text-sm text-muted">Que tal dar uma olhada nas ofertas?</p>
+            <Link href="/ofertas" onClick={closeDrawer} className="btn btn-primary mt-2">
               Ver ofertas
             </Link>
           </div>
         ) : (
           <>
-            <div className="px-5 pt-4">
-              <FreeShippingBar missing={totals.missingForFreeShipping} />
-            </div>
+            <p className="mx-5 mt-4 flex items-center gap-3 rounded-xl bg-sun-soft px-3 py-2.5 text-xs font-medium text-petrol">
+              <Store className="size-4 shrink-0" /> Retire grátis na loja
+              <span aria-hidden="true">·</span>
+              <Truck className="size-4 shrink-0" /> ou receba no seu bairro
+            </p>
             <ul className="flex-1 divide-y divide-line overflow-y-auto px-5">
-              {totals.lines.map((l) => (
-                <CartLine key={l.product.slug} line={l} compact onNavigate={closeDrawer} />
+              {items.map((i) => (
+                <CartLine key={i.slug} item={i} compact onNavigate={closeDrawer} />
               ))}
             </ul>
             <div className="space-y-3 border-t border-line bg-cream px-5 py-4">
               {totals.couponDiscount > 0 && (
                 <p className="flex justify-between text-sm text-emerald-700">
-                  <span>Cupom {totals.coupon?.code}</span>
+                  <span>Cupom {coupon?.code}</span>
                   <span>−{brl(totals.couponDiscount)}</span>
                 </p>
               )}
               <p className="flex items-end justify-between">
                 <span className="text-sm text-muted">Subtotal</span>
-                <span className="font-display text-2xl font-bold text-petrol">{brl(totals.subtotal - totals.couponDiscount)}</span>
+                <span className="font-display text-2xl font-bold text-petrol">{brl(totals.merchandise)}</span>
               </p>
               <Link href="/checkout" onClick={closeDrawer} className="btn btn-primary h-13 w-full text-base">
-                Finalizar compra
+                Finalizar pedido
               </Link>
               <Link href="/carrinho" onClick={closeDrawer} className="btn h-11 w-full border-2 border-line bg-white text-petrol">
                 Ver carrinho completo
