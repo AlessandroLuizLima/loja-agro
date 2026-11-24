@@ -1,24 +1,17 @@
 "use server";
 
-export type NewsletterState =
-  | { status: "idle" }
-  | { status: "error"; message: string }
-  | { status: "success"; coupon: string };
+import { z } from "zod";
+import { db } from "@/lib/server/db";
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export type NewsletterState = { status: "idle" } | { status: "error"; message: string } | { status: "success"; coupon: string };
 
-/**
- * Server Action da newsletter. No protótipo apenas valida e devolve o cupom;
- * na loja real, salve o contato (Nuvemshop Customers API, RD Station, Mailchimp…).
- */
-export async function subscribeNewsletter(
-  _prev: NewsletterState,
-  formData: FormData,
-): Promise<NewsletterState> {
-  const email = String(formData.get("email") ?? "").trim();
-  if (!EMAIL_RE.test(email)) {
-    return { status: "error", message: "Digite um e-mail válido." };
-  }
-  await new Promise((r) => setTimeout(r, 600)); // simula a chamada externa
+const schema = z.object({ email: z.email().max(120) });
+
+/** Cadastra o e-mail na newsletter e devolve o cupom de primeira compra. */
+export async function subscribeNewsletter(_prev: NewsletterState, formData: FormData): Promise<NewsletterState> {
+  const parsed = schema.safeParse({ email: String(formData.get("email") ?? "").trim().toLowerCase() });
+  if (!parsed.success) return { status: "error", message: "Digite um e-mail válido." };
+
+  db().prepare("INSERT OR IGNORE INTO newsletter (email) VALUES (?)").run(parsed.data.email);
   return { status: "success", coupon: "BEMVINDO10" };
 }
