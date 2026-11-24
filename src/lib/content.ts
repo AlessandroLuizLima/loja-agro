@@ -1,94 +1,110 @@
-/** Páginas institucionais. Textos-modelo: revise com o jurídico antes de publicar. */
+import { daysSummary } from "./dates";
+import { brl, formatPhone } from "./format";
+import type { DeliveryZone, Settings } from "./types";
+
+/**
+ * Páginas institucionais montadas a partir das configurações da loja.
+ * Textos-modelo: o lojista deve revisá-los (de preferência com um advogado) antes de publicar.
+ */
 
 export type InfoPage = { slug: string; title: string; group: "institucional" | "politicas"; intro: string; sections: { heading: string; body: string[] }[] };
 
-export const STORE = {
-  name: "PetHouse",
-  legalName: "PetHouse Comércio de Produtos Pet LTDA",
-  cnpj: "00.000.000/0001-00",
-  whatsapp: "5511900000000",
-  whatsappLabel: "(11) 90000-0000",
-  email: "contato@pethouse.com.br",
-  hours: "Seg a Sex, 9h às 18h · Sáb, 9h às 13h",
-  address: "Rua dos Pets, 123 – Vila Madalena, São Paulo – SP",
-};
+export function infoPages(s: Settings, zones: DeliveryZone[]): InfoPage[] {
+  const phone = formatPhone(s.whatsapp);
+  const fullAddress = `${s.address}, ${s.city} – ${s.state}`;
 
-export const infoPages: InfoPage[] = [
-  {
-    slug: "quem-somos",
-    title: "Quem somos",
-    group: "institucional",
-    intro: "A PetHouse nasceu em 2020 da vontade de facilitar a vida de quem ama cães e gatos.",
-    sections: [
-      { heading: "Nossa missão", body: ["Levar produtos de qualidade para a casa de cada tutor, com preço justo, entrega rápida e um atendimento que trata seu pet como da família."] },
-      { heading: "Como escolhemos os produtos", body: ["Trabalhamos apenas com marcas registradas no MAPA e testamos pessoalmente brinquedos e acessórios antes de colocá-los na loja."] },
-    ],
-  },
-  {
-    slug: "clube-pethouse",
-    title: "Clube PetHouse",
-    group: "institucional",
-    intro: "Assine os itens que seu pet usa todo mês e economize 15% em cada entrega.",
-    sections: [
-      { heading: "Como funciona", body: ["Escolha os produtos, defina a frequência (15, 30, 45 ou 60 dias) e receba em casa automaticamente.", "Use o cupom ASSINE15 na sua primeira compra de assinatura."] },
-      { heading: "Sem fidelidade", body: ["Pause, altere ou cancele quando quiser, direto na sua conta."] },
-    ],
-  },
-  {
-    slug: "fale-conosco",
-    title: "Fale conosco",
-    group: "institucional",
-    intro: "Estamos aqui para ajudar você e seu pet.",
-    sections: [
-      { heading: "WhatsApp", body: [`${STORE.whatsappLabel} — resposta em até 15 minutos no horário comercial.`] },
-      { heading: "E-mail", body: [`${STORE.email} — resposta em até 1 dia útil.`] },
-      { heading: "Horário de atendimento", body: [STORE.hours] },
-      { heading: "Loja física", body: [STORE.address] },
-    ],
-  },
-  {
-    slug: "trocas-e-devolucoes",
-    title: "Trocas e devoluções",
-    group: "politicas",
-    intro: "Sua satisfação é garantida. Você tem até 30 dias para trocar ou devolver.",
-    sections: [
-      { heading: "Direito de arrependimento", body: ["Conforme o art. 49 do Código de Defesa do Consumidor, você pode desistir da compra em até 7 dias após o recebimento, com reembolso integral."] },
-      { heading: "Trocas", body: ["Produtos sem uso, na embalagem original, podem ser trocados em até 30 dias. A primeira troca tem frete grátis.", "Rações e petiscos abertos não podem ser trocados, exceto em caso de defeito."] },
-      { heading: "Como solicitar", body: ["Acesse Minha conta > Pedidos ou fale com a gente pelo WhatsApp informando o número do pedido."] },
-    ],
-  },
-  {
-    slug: "politica-de-privacidade",
-    title: "Política de privacidade",
-    group: "politicas",
-    intro: "Tratamos seus dados de acordo com a Lei Geral de Proteção de Dados (LGPD – Lei 13.709/2018).",
-    sections: [
-      { heading: "Dados que coletamos", body: ["Nome, e-mail, telefone, CPF e endereço, usados exclusivamente para processar pedidos, emitir nota fiscal e prestar atendimento."] },
-      { heading: "Pagamentos", body: ["Não armazenamos dados de cartão. Os pagamentos são processados por intermediadores certificados PCI-DSS."] },
-      { heading: "Seus direitos", body: [`Você pode pedir acesso, correção ou exclusão dos seus dados a qualquer momento pelo e-mail ${STORE.email}.`] },
-    ],
-  },
-  {
-    slug: "termos-de-uso",
-    title: "Termos de uso",
-    group: "politicas",
-    intro: "Ao usar este site, você concorda com as condições abaixo.",
-    sections: [
-      { heading: "Preços e estoque", body: ["Preços e disponibilidade podem mudar sem aviso. O valor válido é o exibido no momento da finalização do pedido."] },
-      { heading: "Cupons", body: ["Cupons não são cumulativos e valem uma vez por CPF, salvo indicação contrária."] },
-    ],
-  },
-  {
-    slug: "prazos-de-entrega",
-    title: "Prazos de entrega",
-    group: "politicas",
-    intro: "Entregamos para todo o Brasil pelos Correios e transportadoras parceiras.",
-    sections: [
-      { heading: "Prazos", body: ["Sudeste: PAC de 4 a 6 dias úteis, SEDEX de 1 a 2 dias úteis.", "Demais regiões: PAC de 6 a 10 dias úteis, SEDEX de 2 a 4 dias úteis.", "O prazo começa a contar após a aprovação do pagamento."] },
-      { heading: "Frete grátis", body: ["Compras acima de R$ 199 (após cupons) têm frete grátis na modalidade PAC."] },
-      { heading: "Retirada na loja", body: [`Grátis, em até 2 horas após a aprovação, em ${STORE.address}.`] },
-    ],
-  },
-];
-
-export const getInfoPage = (slug: string) => infoPages.find((p) => p.slug === slug);
+  return [
+    {
+      slug: "quem-somos",
+      title: "Quem somos",
+      group: "institucional",
+      intro: s.tagline,
+      sections: [{ heading: s.storeName, body: s.about.split(/\n+/).filter(Boolean) }],
+    },
+    {
+      slug: "como-comprar",
+      title: "Como comprar",
+      group: "institucional",
+      intro: "Veja preço e estoque na hora e reserve sem precisar mandar mensagem e esperar resposta.",
+      sections: [
+        { heading: "1. Escolha os produtos", body: ["Navegue pelas categorias ou use a busca. Cada produto mostra o preço e se tem em estoque agora."] },
+        {
+          heading: "2. Escolha como receber",
+          body: [
+            s.pickupEnabled ? `Retire na loja (${fullAddress}) no dia que preferir: ${daysSummary(s.pickupDays)}. ${s.pickupNote}` : "",
+            zones.length > 0 ? "Ou receba em casa ou no sítio, no dia de entrega da sua região." : "",
+          ].filter(Boolean),
+        },
+        {
+          heading: "3. Pague como for melhor",
+          body: [
+            s.pixKey ? `Pague com Pix pelo site${s.pixDiscountPercent > 0 ? ` e ganhe ${s.pixDiscountPercent}% de desconto` : ""}, ou pague na retirada/entrega.` : "Pague na retirada ou na entrega.",
+            "Na retirada ou entrega aceitamos dinheiro, cartão e Pix.",
+          ],
+        },
+        { heading: "4. Pronto!", body: ["Você recebe o número do pedido e pode avisar a loja pelo WhatsApp com um toque. A gente separa tudo para você."] },
+      ],
+    },
+    {
+      slug: "fale-conosco",
+      title: "Fale conosco",
+      group: "institucional",
+      intro: "Estamos aqui para ajudar.",
+      sections: [
+        { heading: "WhatsApp", body: [phone] },
+        ...(s.email ? [{ heading: "E-mail", body: [s.email] }] : []),
+        { heading: "Horário de funcionamento", body: [s.hours] },
+        { heading: "Endereço", body: [fullAddress] },
+      ],
+    },
+    {
+      slug: "entregas-e-retirada",
+      title: "Entregas e retirada",
+      group: "politicas",
+      intro: "Retire na loja ou receba no dia de entrega da sua região.",
+      sections: [
+        ...(s.pickupEnabled ? [{ heading: "Retirada na loja (grátis)", body: [`${fullAddress}.`, `Dias: ${daysSummary(s.pickupDays)}. ${s.pickupNote}`] }] : []),
+        ...zones.map((z) => ({
+          heading: z.name,
+          body: [
+            z.areas,
+            `Entregas: ${daysSummary(z.days)}. Taxa: ${z.fee === 0 ? "grátis" : brl(z.fee)}${z.freeAbove != null && z.fee > 0 ? ` (grátis acima de ${brl(z.freeAbove)})` : ""}.`,
+          ].filter(Boolean),
+        })),
+        { heading: "Não achou sua região?", body: [`Chame no WhatsApp ${phone} que a gente combina.`] },
+      ],
+    },
+    {
+      slug: "trocas-e-devolucoes",
+      title: "Trocas e devoluções",
+      group: "politicas",
+      intro: "Comprou e não era bem o que precisava? A gente resolve.",
+      sections: [
+        { heading: "Direito de arrependimento", body: ["Em compras pela internet, você pode desistir em até 7 dias após o recebimento (art. 49 do Código de Defesa do Consumidor), com devolução do valor pago."] },
+        { heading: "Trocas", body: ["Produtos lacrados e sem uso podem ser trocados em até 30 dias na loja.", "Rações, sementes e medicamentos abertos não podem ser trocados, exceto em caso de defeito."] },
+      ],
+    },
+    {
+      slug: "politica-de-privacidade",
+      title: "Política de privacidade",
+      group: "politicas",
+      intro: "Tratamos seus dados de acordo com a Lei Geral de Proteção de Dados (LGPD – Lei 13.709/2018).",
+      sections: [
+        { heading: "Dados que coletamos", body: ["Nome, telefone, e-mail e endereço de entrega, usados só para separar, entregar e combinar seus pedidos."] },
+        { heading: "Pagamentos", body: ["Não pedimos nem guardamos dados de cartão no site. O Pix é pago direto no aplicativo do seu banco."] },
+        { heading: "Seus direitos", body: [`Você pode pedir acesso, correção ou exclusão dos seus dados pelo WhatsApp ${phone}${s.email ? ` ou pelo e-mail ${s.email}` : ""}.`] },
+      ],
+    },
+    {
+      slug: "termos-de-uso",
+      title: "Termos de uso",
+      group: "politicas",
+      intro: "Ao usar este site, você concorda com as condições abaixo.",
+      sections: [
+        { heading: "Preços e estoque", body: ["Preços e estoque são atualizados pela loja e podem mudar sem aviso. Vale o valor mostrado ao finalizar o pedido."] },
+        { heading: "Produtos sob consulta", body: ["Produtos de venda controlada (como medicamentos que exigem receita) só são vendidos com a documentação exigida, combinada pelo WhatsApp ou na loja."] },
+        { heading: "Cupons", body: ["Cupons não são cumulativos."] },
+      ],
+    },
+  ];
+}

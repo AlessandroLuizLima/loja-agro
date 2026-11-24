@@ -1,129 +1,60 @@
-import { getProduct, type Product } from "./catalog";
+import type { CouponInfo, DeliveryZone, PaymentMethod } from "./types";
 
 /**
- * Regras de preço da loja, compartilhadas entre o carrinho (cliente) e o
- * checkout (servidor). O servidor sempre recalcula tudo a partir do catálogo:
- * nunca confia em preços vindos do navegador.
+ * Regras de preço compartilhadas entre o carrinho (navegador) e o checkout (servidor).
+ * O servidor sempre recalcula com os preços do banco: nunca confia em valores do navegador.
  */
 
-export const FREE_SHIPPING_MIN = 199;
-export const PIX_DISCOUNT = 0.05;
-export const MAX_INSTALLMENTS = 6;
-export const MIN_INSTALLMENT_VALUE = 20;
-export const MAX_QTY_PER_ITEM = 10;
+export const MAX_QTY_PER_ITEM = 99;
 
-export type CartItem = { slug: string; qty: number };
+export const round = (n: number) => Math.round(n * 100) / 100;
 
-export type PaymentMethod = "pix" | "cartao" | "boleto";
-
-export type Coupon = { code: string; percent: number; minSubtotal: number; description: string };
-
-export const COUPONS: Coupon[] = [
-  { code: "BEMVINDO10", percent: 10, minSubtotal: 99, description: "10% OFF na primeira compra (mín. R$ 99)" },
-  { code: "ASSINE15", percent: 15, minSubtotal: 0, description: "15% OFF do Clube PetHouse" },
-];
-
-export type ShippingOption = {
-  id: "pac" | "sedex" | "retirada";
-  name: string;
-  deadline: string;
-  price: number;
-};
-
-const round = (n: number) => Math.round(n * 100) / 100;
-
-export function findCoupon(code: string | undefined | null) {
-  if (!code) return undefined;
-  return COUPONS.find((c) => c.code === code.trim().toUpperCase());
+export function couponProblem(coupon: CouponInfo, subtotal: number) {
+  if (subtotal < coupon.minSubtotal) return `Este cupom vale para compras a partir de R$ ${coupon.minSubtotal.toFixed(2).replace(".", ",")}.`;
+  return undefined;
 }
 
-export function onlyDigits(value: string) {
-  return value.replace(/\D/g, "");
+/** Taxa de entrega da zona, considerando o valor mínimo para entrega grátis. */
+export function zoneFee(zone: Pick<DeliveryZone, "fee" | "freeAbove">, merchandise: number) {
+  return zone.freeAbove != null && merchandise >= zone.freeAbove ? 0 : zone.fee;
 }
-
-/** Frete fictício por região (1º dígito do CEP). Substitua pela API de frete da Nuvemshop/Melhor Envio. */
-export function shippingOptions(cep: string, merchandiseTotal: number): ShippingOption[] {
-  const digits = onlyDigits(cep);
-  if (digits.length !== 8) return [];
-  const southeast = Number(digits[0]) <= 3;
-  const free = merchandiseTotal >= FREE_SHIPPING_MIN;
-  return [
-    { id: "pac", name: free ? "Frete grátis (PAC)" : "PAC", deadline: southeast ? "4 a 6 dias úteis" : "6 a 10 dias úteis", price: free ? 0 : southeast ? 14.9 : 22.9 },
-    { id: "sedex", name: "SEDEX", deadline: southeast ? "1 a 2 dias úteis" : "2 a 4 dias úteis", price: southeast ? 24.9 : 39.9 },
-    { id: "retirada", name: "Retirar na loja (São Paulo, SP)", deadline: "Pronto em 2 horas", price: 0 },
-  ];
-}
-
-export type PricedLine = { product: Product; qty: number; lineTotal: number };
 
 export type Totals = {
-  lines: PricedLine[];
   itemCount: number;
   subtotal: number;
-  coupon?: Coupon;
-  couponError?: string;
   couponDiscount: number;
-  shipping?: ShippingOption;
-  shippingPrice: number;
+  couponError?: string;
+  merchandise: number;
+  deliveryFee: number;
   pixDiscount: number;
   total: number;
-  installments: { count: number; value: number };
-  /** Quanto falta para ganhar frete grátis */
-  missingForFreeShipping: number;
 };
 
-export function maxInstallments(total: number) {
-  return Math.max(1, Math.min(MAX_INSTALLMENTS, Math.floor(total / MIN_INSTALLMENT_VALUE)));
-}
-
 export function computeTotals(input: {
-  items: CartItem[];
-  couponCode?: string | null;
-  cep?: string;
-  shippingId?: string | null;
+  lines: { price: number; qty: number }[];
+  coupon?: CouponInfo | null;
+  zone?: Pick<DeliveryZone, "fee" | "freeAbove"> | null;
   payment?: PaymentMethod;
+  pixDiscountPercent?: number;
 }): Totals {
-  const lines: PricedLine[] = [];
-  for (const item of input.items) {
-    const product = getProduct(item.slug);
-    if (!product) continue;
-    const qty = Math.max(1, Math.min(Math.floor(item.qty), MAX_QTY_PER_ITEM, product.stock));
-    lines.push({ product, qty, lineTotal: round(product.price * qty) });
-  }
+  const subtotal = round(input.lines.reduce((s, l) => s + l.price * l.qty, 0));
+  const itemCount = input.lines.reduce((n, l) => n + l.qty, 0);
 
-  const subtotal = round(lines.reduce((s, l) => s + l.lineTotal, 0));
-  const itemCount = lines.reduce((s, l) => s + l.qty, 0);
-
-  let coupon = findCoupon(input.couponCode);
-  let couponError: string | undefined;
-  if (input.couponCode && !coupon) couponError = "Cupom inválido ou expirado.";
-  if (coupon && subtotal < coupon.minSubtotal) {
-    couponError = `Este cupom vale para compras acima de R$ ${coupon.minSubtotal}.`;
-    coupon = undefined;
-  }
-  const couponDiscount = coupon ? round(subtotal * (coupon.percent / 100)) : 0;
+  const couponError = input.coupon ? couponProblem(input.coupon, subtotal) : undefined;
+  const couponDiscount = input.coupon && !couponError ? round(subtotal * (input.coupon.percent / 100)) : 0;
   const merchandise = round(subtotal - couponDiscount);
 
-  const options = input.cep ? shippingOptions(input.cep, merchandise) : [];
-  const shipping = options.find((o) => o.id === input.shippingId);
-  const shippingPrice = shipping?.price ?? 0;
-
-  const pixDiscount = input.payment === "pix" ? round(merchandise * PIX_DISCOUNT) : 0;
-  const total = round(merchandise - pixDiscount + shippingPrice);
-  const count = maxInstallments(total);
+  const deliveryFee = input.zone ? zoneFee(input.zone, merchandise) : 0;
+  const pixDiscount = input.payment === "pix" ? round(merchandise * ((input.pixDiscountPercent ?? 0) / 100)) : 0;
 
   return {
-    lines,
     itemCount,
     subtotal,
-    coupon,
-    couponError,
     couponDiscount,
-    shipping,
-    shippingPrice,
+    couponError,
+    merchandise,
+    deliveryFee,
     pixDiscount,
-    total,
-    installments: { count, value: round(total / count) },
-    missingForFreeShipping: Math.max(0, round(FREE_SHIPPING_MIN - merchandise)),
+    total: round(merchandise - pixDiscount + deliveryFee),
   };
 }
