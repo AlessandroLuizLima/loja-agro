@@ -9,6 +9,7 @@ import { ProductForm } from "@/components/admin/product-form";
 import { PageHeader } from "@/components/admin/ui";
 import { formatDateTime } from "@/lib/format";
 import { getProductById, listCategories } from "@/lib/server/catalog";
+import { adminUrl } from "@/lib/admin-path";
 
 export const metadata: Metadata = { title: "Editar produto" };
 
@@ -19,7 +20,7 @@ export default async function EditProductPage({ params }: PageProps<"/admin/prod
 
   return (
     <>
-      <Link href="/admin/produtos" className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-petrol hover:underline">
+      <Link href={adminUrl("/produtos")} className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-petrol hover:underline">
         <ArrowLeft className="size-4" /> Produtos
       </Link>
       <PageHeader

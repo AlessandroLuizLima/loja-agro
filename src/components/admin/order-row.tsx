@@ -4,12 +4,13 @@ import { dateLabel } from "@/lib/dates";
 import { brl } from "@/lib/format";
 import type { Order } from "@/lib/types";
 import { OrderStatusBadge, PaymentBadge } from "../order-status-badge";
+import { adminUrl } from "@/lib/admin-path";
 
 export function OrderRow({ order: o, today }: { order: Order; today: string }) {
   const late = o.fulfillment.date < today && o.status !== "concluido" && o.status !== "cancelado";
   return (
     <li>
-      <Link href={`/admin/pedidos/${o.id}`} className="block rounded-xl px-2 py-3 transition hover:bg-cream">
+      <Link href={adminUrl(`/pedidos/${o.id}`)} className="block rounded-xl px-2 py-3 transition hover:bg-cream">
         <span className="flex items-baseline gap-2">
           <span className="font-display font-bold text-petrol">#{o.number}</span>
           <span className="min-w-0 flex-1 truncate font-medium">{o.customer.name}</span>

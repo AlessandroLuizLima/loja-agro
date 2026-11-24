@@ -8,6 +8,7 @@ import { brl } from "@/lib/format";
 import { lowStockProducts } from "@/lib/server/catalog";
 import { listOrders, salesSummary } from "@/lib/server/orders";
 import { getSettings } from "@/lib/server/settings";
+import { adminUrl } from "@/lib/admin-path";
 
 export default async function Dashboard() {
   await connection();
@@ -32,7 +33,7 @@ export default async function Dashboard() {
       <PageHeader title="Início" subtitle={`Resumo da ${settings.storeName}`} />
 
       {setupMissing.length > 0 && (
-        <Link href="/admin/configuracoes" className="mb-5 flex items-center gap-3 rounded-2xl border-2 border-sun bg-sun-soft p-4 text-sm">
+        <Link href={adminUrl("/configuracoes")} className="mb-5 flex items-center gap-3 rounded-2xl border-2 border-sun bg-sun-soft p-4 text-sm">
           <AlertTriangle className="size-5 shrink-0 text-amber-700" />
           <span className="flex-1">
             Falta configurar: <b>{setupMissing.join(", ")}</b>.
@@ -74,7 +75,7 @@ export default async function Dashboard() {
               </ul>
             </>
           )}
-          <Link href="/admin/pedidos" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-dark hover:underline">
+          <Link href={adminUrl("/pedidos")} className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-dark hover:underline">
             Ver todos os pedidos <ArrowRight className="size-4" />
           </Link>
         </Card>
@@ -103,7 +104,7 @@ export default async function Dashboard() {
             <ul className="space-y-2 text-sm">
               {lowStock.slice(0, 8).map((p) => (
                 <li key={p.id}>
-                  <Link href={`/admin/produtos/${p.id}`} className="flex justify-between gap-3 hover:text-brand-dark">
+                  <Link href={adminUrl(`/produtos/${p.id}`)} className="flex justify-between gap-3 hover:text-brand-dark">
                     <span className="truncate">{p.name}</span>
                     <b className={p.stock === 0 ? "text-red-600" : "text-brand-dark"}>{p.stock}</b>
                   </Link>

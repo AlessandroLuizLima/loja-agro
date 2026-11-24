@@ -7,6 +7,7 @@ import { EmptyState, PageHeader } from "@/components/admin/ui";
 import { ProductImage } from "@/components/product-image";
 import { brl } from "@/lib/format";
 import { listAllProducts, listCategories } from "@/lib/server/catalog";
+import { adminUrl } from "@/lib/admin-path";
 
 export const metadata: Metadata = { title: "Produtos" };
 
@@ -25,7 +26,7 @@ export default async function ProductsPage({ searchParams }: PageProps<"/admin/p
         title="Produtos"
         subtitle={`${products.length} ${products.length === 1 ? "produto" : "produtos"}`}
         action={
-          <Link href="/admin/produtos/novo" className="btn btn-primary h-11 px-5 text-sm">
+          <Link href={adminUrl("/produtos/novo")} className="btn btn-primary h-11 px-5 text-sm">
             <Plus className="size-4" /> Novo produto
           </Link>
         }
@@ -61,7 +62,7 @@ export default async function ProductsPage({ searchParams }: PageProps<"/admin/p
         <ul className="divide-y divide-line rounded-2xl bg-white shadow-card">
           {products.map((p) => (
             <li key={p.id} className="flex flex-wrap items-center gap-3 p-3 sm:flex-nowrap">
-              <Link href={`/admin/produtos/${p.id}`} className="flex min-w-0 flex-1 items-center gap-3">
+              <Link href={adminUrl(`/produtos/${p.id}`)} className="flex min-w-0 flex-1 items-center gap-3">
                 <ProductImage item={p} className="size-14 shrink-0 rounded-xl" emojiClassName="text-2xl" />
                 <span className="min-w-0">
                   <b className="block truncate font-medium text-ink hover:text-brand-dark">{p.name}</b>

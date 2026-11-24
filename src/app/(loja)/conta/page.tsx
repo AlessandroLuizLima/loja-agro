@@ -10,6 +10,7 @@ import { brl, formatDate } from "@/lib/format";
 import { listOrdersByUser } from "@/lib/server/orders";
 import { requireUser } from "@/lib/server/users";
 import { signOut } from "./actions";
+import { adminUrl } from "@/lib/admin-path";
 
 export const metadata: Metadata = { title: "Minha conta", robots: { index: false } };
 
@@ -38,7 +39,7 @@ export default async function AccountPage() {
             <dd className="pt-1 text-xs text-muted">Cliente desde {formatDate(user.createdAt)}</dd>
           </dl>
           {user.role === "admin" && (
-            <Link href="/admin" className="btn btn-petrol mt-6 h-11 w-full">
+            <Link href={adminUrl()} className="btn btn-petrol mt-6 h-11 w-full">
               <LayoutDashboard className="size-4" /> Painel da loja
             </Link>
           )}

@@ -15,6 +15,7 @@ import { getOrder } from "@/lib/server/orders";
 import { getSettings } from "@/lib/server/settings";
 import { ON_DELIVERY_LABEL, statusLabel, type Order, type OrderStatus } from "@/lib/types";
 import { statusMessageForCustomer, waLink } from "@/lib/whatsapp";
+import { adminUrl } from "@/lib/admin-path";
 
 export const metadata: Metadata = { title: "Pedido" };
 
@@ -51,7 +52,7 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/pedid
   return (
     <>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <Link href="/admin/pedidos" className="flex items-center gap-1.5 text-sm font-semibold text-petrol hover:underline print:hidden">
+        <Link href={adminUrl("/pedidos")} className="flex items-center gap-1.5 text-sm font-semibold text-petrol hover:underline print:hidden">
           <ArrowLeft className="size-4" /> Pedidos
         </Link>
         <PrintButton />

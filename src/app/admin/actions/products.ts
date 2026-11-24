@@ -10,6 +10,7 @@ import { deleteImageIfUnused, storeUpload } from "@/lib/server/images";
 import { audit } from "@/lib/server/audit";
 import { requireAdmin } from "@/lib/server/users";
 import { TINT_NAMES } from "@/lib/types";
+import { adminUrl } from "@/lib/admin-path";
 
 const schema = z.object({
   name: z.string().trim().min(3, "Nome muito curto.").max(120, "Nome muito longo."),
@@ -64,7 +65,7 @@ export async function saveProductAction(_prev: AdminState, fd: FormData): Promis
   if (existing?.imageId && existing.imageId !== imageId) deleteImageIfUnused(existing.imageId);
   await audit(admin.email, "produto_salvo", d.name);
 
-  redirect(`/admin/produtos?salvo=${encodeURIComponent(d.name)}`);
+  redirect(adminUrl(`/produtos?salvo=${encodeURIComponent(d.name)}`));
 }
 
 export async function deleteProductAction(fd: FormData) {
@@ -75,7 +76,7 @@ export async function deleteProductAction(fd: FormData) {
     deleteImageIfUnused(product.imageId);
     await audit(admin.email, "produto_apagado", product.name);
   }
-  redirect("/admin/produtos");
+  redirect(adminUrl("/produtos"));
 }
 
 /** Atualização rápida de estoque direto na lista de produtos */

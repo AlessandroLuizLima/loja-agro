@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { redirect } from "next/navigation";
 import { db } from "./db";
 import { getSession } from "./session";
+import { adminUrl } from "../admin-path";
 
 export type Role = "cliente" | "admin";
 
@@ -97,10 +98,10 @@ export async function requireUser(next = "/conta") {
  */
 export async function requireAdmin({ allowPendingPassword = false } = {}) {
   const user = await getCurrentUser();
-  if (!user) redirect("/admin/entrar");
-  if (user.role !== "admin") redirect("/admin/entrar?erro=permissao");
+  if (!user) redirect(adminUrl("/entrar"));
+  if (user.role !== "admin") redirect(adminUrl("/entrar?erro=permissao"));
   // Senha inicial (das variáveis de ambiente) precisa ser trocada antes de usar o painel
-  if (user.mustChangePassword && !allowPendingPassword) redirect("/admin/trocar-senha");
+  if (user.mustChangePassword && !allowPendingPassword) redirect(adminUrl("/trocar-senha"));
   return user;
 }
 

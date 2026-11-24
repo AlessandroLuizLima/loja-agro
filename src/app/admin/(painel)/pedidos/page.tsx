@@ -6,6 +6,7 @@ import { EmptyState, PageHeader } from "@/components/admin/ui";
 import { todayISO } from "@/lib/dates";
 import { countOrdersByStatus, listOrders, type OrderFilter } from "@/lib/server/orders";
 import { ORDER_STATUSES, statusLabel } from "@/lib/types";
+import { adminUrl } from "@/lib/admin-path";
 
 export const metadata: Metadata = { title: "Pedidos" };
 
@@ -30,7 +31,7 @@ export default async function OrdersPage({ searchParams }: PageProps<"/admin/ped
             return (
               <li key={f}>
                 <Link
-                  href={f === "abertos" ? "/admin/pedidos" : `/admin/pedidos?status=${f}`}
+                  href={f === "abertos" ? adminUrl("/pedidos") : adminUrl(`/pedidos?status=${f}`)}
                   aria-current={f === filter ? "page" : undefined}
                   className="flex items-center gap-1.5 rounded-full border-2 border-line bg-white px-3.5 py-1.5 text-sm font-medium whitespace-nowrap text-petrol aria-[current=page]:border-petrol aria-[current=page]:bg-petrol aria-[current=page]:text-white"
                 >

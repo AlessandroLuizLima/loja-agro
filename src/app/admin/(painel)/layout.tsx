@@ -4,6 +4,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { signOut } from "@/app/(loja)/conta/actions";
 import { AdminNav } from "@/components/admin/admin-nav";
+import { adminUrl } from "@/lib/admin-path";
 import { countOrdersByStatus } from "@/lib/server/orders";
 import { runRetentionIfDue } from "@/lib/server/privacy";
 import { getSettings } from "@/lib/server/settings";
@@ -39,7 +40,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
           </div>
         </div>
         <div className="px-2 py-2 lg:mt-4 lg:px-3">
-          <AdminNav newOrders={newOrders} />
+          <AdminNav newOrders={newOrders} base={adminUrl()} />
         </div>
         <p className="hidden px-4 pt-6 pb-4 text-xs text-white/50 lg:block">Logado como {admin.email}</p>
       </aside>
