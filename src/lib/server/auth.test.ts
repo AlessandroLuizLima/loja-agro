@@ -29,3 +29,12 @@ describe("token de sessão", () => {
     expect(readToken(undefined, SECRET)).toBeNull();
   });
 });
+
+describe("versão da sessão", () => {
+  it("guarda a versão e recusa versão inválida", () => {
+    expect(readToken(createToken({ uid: "u1", sv: 3, exp: Date.now() + 60_000 }, SECRET), SECRET)?.sv).toBe(3);
+    const data = Buffer.from(JSON.stringify({ uid: "u1", sv: "3", exp: Date.now() + 60_000 })).toString("base64url");
+    const forged = createToken({ uid: "u1", exp: Date.now() + 60_000 }, SECRET).split(".")[1];
+    expect(readToken(`${data}.${forged}`, SECRET)).toBeNull();
+  });
+});

@@ -5,7 +5,8 @@ import { createHmac, timingSafeEqual } from "node:crypto";
  * Funções puras (sem cookies) para poderem ser testadas isoladamente.
  */
 
-export type SessionPayload = { uid: string; exp: number };
+/** sv = versão da sessão do usuário: trocar a senha aumenta a versão e derruba as sessões antigas. */
+export type SessionPayload = { uid: string; exp: number; sv?: number };
 
 const sign = (data: string, secret: string) => createHmac("sha256", secret).update(data).digest("base64url");
 
@@ -24,6 +25,7 @@ export function readToken(token: string | undefined, secret: string, now = Date.
   try {
     const payload = JSON.parse(Buffer.from(data, "base64url").toString()) as SessionPayload;
     if (typeof payload.uid !== "string" || typeof payload.exp !== "number" || payload.exp < now) return null;
+    if (payload.sv !== undefined && typeof payload.sv !== "number") return null;
     return payload;
   } catch {
     return null;

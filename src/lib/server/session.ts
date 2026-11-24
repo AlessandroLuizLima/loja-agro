@@ -4,7 +4,8 @@ import { connection } from "next/server";
 import { createToken, readToken } from "./token";
 
 const COOKIE = "ph_session";
-const MAX_AGE_S = 60 * 60 * 24 * 30; // 30 dias
+const MAX_AGE_S = 60 * 60 * 24 * 30; // cliente: 30 dias
+const ADMIN_MAX_AGE_S = 60 * 60 * 12; // painel: 12 horas
 
 function secret() {
   const s = process.env.SESSION_SECRET;
@@ -15,22 +16,24 @@ function secret() {
   return "dev-only-secret-troque-em-producao-0000000000";
 }
 
-export async function createSession(userId: string) {
-  const token = createToken({ uid: userId, exp: Date.now() + MAX_AGE_S * 1000 }, secret());
+export async function createSession(user: { id: string; sessionVersion: number; role: string }) {
+  const maxAge = user.role === "admin" ? ADMIN_MAX_AGE_S : MAX_AGE_S;
+  const token = createToken({ uid: user.id, sv: user.sessionVersion, exp: Date.now() + maxAge * 1000 }, secret());
   (await cookies()).set(COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: MAX_AGE_S,
+    maxAge,
   });
 }
 
-export async function getSessionUserId() {
+export async function getSession() {
   // Validar a expiração usa o relógio: marca a leitura como "na hora do request"
   await connection();
   const token = (await cookies()).get(COOKIE)?.value;
-  return readToken(token, secret())?.uid ?? null;
+  const payload = readToken(token, secret());
+  return payload ? { uid: payload.uid, sv: payload.sv ?? 1 } : null;
 }
 
 export async function destroySession() {
