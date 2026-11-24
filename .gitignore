@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# banco de dados local (SQLite)
+/data
+
+# exemplo de variáveis de ambiente pode ir para o git
+!.env.example
