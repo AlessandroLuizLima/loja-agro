@@ -4,12 +4,12 @@ import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useActionState } from "react";
-import { signIn, type AuthState } from "@/app/conta/actions";
+import { signIn, type AuthState } from "@/app/(loja)/conta/actions";
 import { FormField } from "../form-field";
 import { PasswordField } from "./password-field";
 
-export function SignInForm() {
-  const next = useSearchParams().get("next") ?? "/conta";
+export function SignInForm({ defaultNext = "/conta", allowSignUp = true }: { defaultNext?: string; allowSignUp?: boolean }) {
+  const next = useSearchParams().get("next") ?? defaultNext;
   const [state, action, pending] = useActionState<AuthState, FormData>(signIn, {});
 
   return (
@@ -27,12 +27,14 @@ export function SignInForm() {
           {pending && <Loader2 className="size-5 animate-spin" />} Entrar
         </button>
       </form>
+      {allowSignUp && (
       <p className="mt-6 text-center text-sm text-muted">
         Ainda não tem conta?{" "}
         <Link href={`/conta/cadastrar?next=${encodeURIComponent(next)}`} className="font-semibold text-brand-dark hover:underline">
           Cadastre-se grátis
         </Link>
       </p>
+      )}
     </>
   );
 }

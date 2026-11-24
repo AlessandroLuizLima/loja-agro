@@ -4,7 +4,7 @@ import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useActionState } from "react";
-import { signUp, type AuthState } from "@/app/conta/actions";
+import { signUp, type AuthState } from "@/app/(loja)/conta/actions";
 import { maskPhone } from "@/lib/masks";
 import { FormField } from "../form-field";
 import { PasswordField } from "./password-field";
@@ -22,7 +22,7 @@ export function SignUpForm() {
         <FormField label="Nome completo" name="name" autoComplete="name" required defaultValue={state.values?.name} error={e.name} />
         <FormField label="E-mail" name="email" type="email" autoComplete="email" required defaultValue={state.values?.email} error={e.email} />
         <FormField
-          label="Celular (opcional)"
+          label="Celular / WhatsApp (opcional)"
           name="phone"
           type="tel"
           inputMode="numeric"

@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Criar conta", robots: { index: false
 
 export default function SignUpPage() {
   return (
-    <AuthCard title="Criar sua conta" subtitle="Ganhe 10% OFF na primeira compra com o cupom BEMVINDO10.">
+    <AuthCard title="Criar sua conta" subtitle="Acompanhe seus pedidos e compre mais rápido.">
       <Suspense>
         <RedirectIfSignedIn />
       </Suspense>
