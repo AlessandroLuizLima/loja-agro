@@ -8,9 +8,12 @@ import { signIn, type AuthState } from "@/app/(loja)/conta/actions";
 import { FormField } from "../form-field";
 import { PasswordField } from "./password-field";
 
-export function SignInForm({ defaultNext = "/conta", allowSignUp = true }: { defaultNext?: string; allowSignUp?: boolean }) {
+type SignInAction = (prev: AuthState, formData: FormData) => Promise<AuthState>;
+
+/** `action`: o painel passa o próprio login (adminSignIn); a loja usa o login de cliente. */
+export function SignInForm({ defaultNext = "/conta", allowSignUp = true, action: signInAction = signIn }: { defaultNext?: string; allowSignUp?: boolean; action?: SignInAction }) {
   const next = useSearchParams().get("next") ?? defaultNext;
-  const [state, action, pending] = useActionState<AuthState, FormData>(signIn, {});
+  const [state, action, pending] = useActionState<AuthState, FormData>(signInAction, {});
 
   return (
     <>

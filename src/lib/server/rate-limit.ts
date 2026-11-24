@@ -13,6 +13,8 @@ export const LIMITS = {
   loginEmail: { max: 5, windowMin: 15 },
   /** Mesmo IP, várias contas: 20 falhas em 15 minutos */
   loginIp: { max: 20, windowMin: 15 },
+  /** Código da verificação em duas etapas: 5 erros em 15 minutos */
+  twoFactor: { max: 5, windowMin: 15 },
   /** Cadastros feitos do mesmo IP */
   signupIp: { max: 10, windowMin: 60 },
 } satisfies Record<string, Limit>;

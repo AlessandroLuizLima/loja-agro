@@ -77,24 +77,21 @@ export async function signIn(_prev: AuthState, formData: FormData): Promise<Auth
 
   // Bloqueio por conta e por IP: impede testar milhares de senhas
   const wait = Math.max(blockedFor(emailKey, LIMITS.loginEmail), blockedFor(ipKey, LIMITS.loginIp));
-  if (wait) {
-    if (findUserByEmail(email)?.role === "admin") await audit(email, "login_bloqueado");
-    return { error: tooMany(wait), values: { email } };
-  }
+  if (wait) return { error: tooMany(wait), values: { email } };
 
   const user = email ? findUserByEmail(email) : undefined;
 
-  // Mesma mensagem para e-mail inexistente e senha errada (não revela quem tem conta)
-  if (!user || !(await verifyPassword(password, user.password_hash))) {
+  // Mesma mensagem para e-mail inexistente e senha errada (não revela quem tem conta).
+  // Administrador só entra pela página do painel: tentativas aqui nem chegam a testar a senha dele
+  // e contam num limite separado, então ninguém tranca o lojista para fora tentando senhas por aqui.
+  if (!user || user.role === "admin" || !(await verifyPassword(password, user.password_hash))) {
     recordAttempt(emailKey);
     recordAttempt(ipKey);
-    if (user?.role === "admin") await audit(email, "login_falhou");
     return { error: "E-mail ou senha incorretos.", values: { email } };
   }
 
   clearAttempts(emailKey);
   await createSession(sessionUser(user));
-  if (user.role === "admin") await audit(user.email, "login");
   redirect(safeNext(formData.get("next")));
 }
 
