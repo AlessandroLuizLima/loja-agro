@@ -18,8 +18,8 @@ export function Header({ logo, account, drawerAccount, categories }: { logo: Rea
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-white/90 shadow-[0_2px_12px_rgb(30_50_30/.06)] backdrop-blur-md">
-        <div className="container-page flex flex-wrap items-center gap-2.5 py-3 lg:flex-nowrap lg:gap-6 lg:py-4">
+      <header className="site-header sticky top-0 z-40 bg-white/90 shadow-[0_2px_12px_rgb(30_50_30/.06)] backdrop-blur-md">
+        <div className="container-page flex flex-wrap items-center gap-x-1 gap-y-2.5 py-3 sm:gap-x-2.5 lg:flex-nowrap lg:gap-6 lg:py-4">
           <button type="button" aria-label="Abrir menu" onClick={() => menu.current?.showModal()} className="icon-btn lg:hidden">
             <Menu className="size-6" />
           </button>
@@ -60,7 +60,7 @@ export function Header({ logo, account, drawerAccount, categories }: { logo: Rea
           <ul className="container-page no-scrollbar flex gap-1 overflow-x-auto py-2 lg:justify-center lg:gap-2">
             {categories.map((c) => (
               <li key={c.slug}>
-                <Link href={`/categoria/${c.slug}`} className="block rounded-full px-3.5 py-2 text-sm font-medium whitespace-nowrap text-petrol transition hover:bg-petrol-soft">
+                <Link href={`/categoria/${c.slug}`} className="block rounded-full px-3.5 py-2 text-sm font-medium whitespace-nowrap text-petrol transition hover:bg-petrol-soft hover:text-petrol-dark">
                   {c.name}
                 </Link>
               </li>
