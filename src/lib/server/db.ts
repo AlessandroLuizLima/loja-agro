@@ -112,6 +112,32 @@ const MIGRATIONS = [
   CREATE INDEX orders_user_idx ON orders(user_id, created_at DESC);
   CREATE INDEX orders_status_idx ON orders(status, created_at DESC);
   `,
+  // 2: segurança e LGPD
+  `
+  ALTER TABLE users ADD COLUMN session_version INTEGER NOT NULL DEFAULT 1;
+  ALTER TABLE users ADD COLUMN must_change_password INTEGER NOT NULL DEFAULT 0;
+  ALTER TABLE users ADD COLUMN privacy_accepted_at TEXT;
+  ALTER TABLE orders ADD COLUMN privacy_accepted_at TEXT;
+  ALTER TABLE orders ADD COLUMN anonymized_at TEXT;
+  -- o administrador criado pelas variáveis de ambiente troca a senha no primeiro acesso
+  UPDATE users SET must_change_password = 1 WHERE role = 'admin';
+
+  CREATE TABLE login_attempts (
+    key TEXT NOT NULL,
+    at  INTEGER NOT NULL
+  );
+  CREATE INDEX login_attempts_idx ON login_attempts(key, at);
+
+  CREATE TABLE audit_log (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    at         TEXT NOT NULL DEFAULT (datetime('now')),
+    user_email TEXT,
+    action     TEXT NOT NULL,
+    detail     TEXT NOT NULL DEFAULT '',
+    ip         TEXT NOT NULL DEFAULT ''
+  );
+  CREATE INDEX audit_log_at_idx ON audit_log(at DESC);
+  `,
 ];
 
 const globalForDb = globalThis as unknown as { lojaDb?: DatabaseSync };
@@ -155,10 +181,10 @@ function ensureAdmin(conn: DatabaseSync) {
   }
   const existing = conn.prepare("SELECT id FROM users WHERE email = ?").get(email) as { id: string } | undefined;
   if (existing) {
-    conn.prepare("UPDATE users SET role = 'admin' WHERE id = ?").run(existing.id);
+    conn.prepare("UPDATE users SET role = 'admin', must_change_password = 1 WHERE id = ?").run(existing.id);
   } else {
     conn
-      .prepare("INSERT INTO users (id, name, email, role, password_hash) VALUES (?, ?, ?, 'admin', ?)")
+      .prepare("INSERT INTO users (id, name, email, role, password_hash, must_change_password) VALUES (?, ?, ?, 'admin', ?, 1)")
       .run(randomUUID(), "Administrador", email, hashPasswordSync(password));
   }
 }
