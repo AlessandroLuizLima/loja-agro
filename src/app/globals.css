@@ -75,16 +75,82 @@
 @keyframes reveal {
   from { opacity: 0; translate: 0 24px; }
 }
+@keyframes enter {
+  from { opacity: 0; translate: 0 18px; filter: blur(4px); }
+}
+@keyframes float {
+  50% { translate: 0 -10px; }
+}
+@keyframes drift {
+  50% { translate: 24px -18px; scale: 1.08; }
+}
+@keyframes shimmer {
+  to { background-position: -200% 0; }
+}
+@keyframes ping-ring {
+  0% { opacity: 0.55; scale: 1; }
+  80%, 100% { opacity: 0; scale: 1.6; }
+}
+@keyframes pop {
+  0% { scale: 0.6; opacity: 0; }
+  60% { scale: 1.12; }
+}
+@keyframes header-shadow {
+  to { box-shadow: 0 6px 24px rgb(30 50 30 / 0.1); background-color: rgb(255 255 255 / 0.96); }
+}
 
-/* Cards surgem ao rolar — puro CSS (scroll-driven animations), sem JS */
+/* Esqueleto de carregamento */
+.skeleton {
+  background: linear-gradient(90deg, var(--color-line) 25%, color-mix(in oklab, var(--color-line) 40%, white) 50%, var(--color-line) 75%) 0 0 / 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
 @media (prefers-reduced-motion: no-preference) {
+  /* Entrada ao carregar a página, em cascata: style={{ "--d": "120ms" }} */
+  .enter {
+    animation: enter 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) var(--d, 0ms) backwards;
+  }
+  .float {
+    animation: float 5s ease-in-out var(--d, 0ms) infinite;
+  }
+  .drift {
+    animation: drift 14s ease-in-out infinite;
+  }
+  .pop {
+    animation: pop 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .ping-ring::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: inherit;
+    z-index: -1;
+    animation: ping-ring 2.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+  .page-in {
+    animation: enter 0.45s ease-out backwards;
+  }
+
+  /* Cards e seções surgem ao rolar — puro CSS (scroll-driven animations), sem JS */
   @supports (animation-timeline: view()) {
     .reveal {
       animation: reveal linear both;
       animation-timeline: view();
       animation-range: entry 0% entry 35%;
     }
+    .site-header {
+      animation: header-shadow linear both;
+      animation-timeline: scroll();
+      animation-range: 0 120px;
+    }
   }
+}
+
+/* Textura de pontinhos para fundos escuros */
+.dots {
+  background-image: radial-gradient(rgb(255 255 255 / 0.12) 1px, transparent 1px);
+  background-size: 18px 18px;
 }
 
 /* Menu e carrinho laterais: <dialog> nativo que desliza ao abrir.

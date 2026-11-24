@@ -17,7 +17,7 @@ export function StoreShell({ settings, categories, children }: { settings: Setti
         Pular para o conteúdo
       </a>
       {settings.announcement && (
-        <div role="note" className="flex items-center justify-center gap-2 bg-petrol px-3 py-2 text-center text-xs font-medium text-white sm:text-sm">
+        <div role="note" className="dots flex items-center justify-center gap-2 bg-petrol-dark px-3 py-2 text-center text-xs font-medium text-white sm:text-sm">
           <Megaphone className="hidden size-4 shrink-0 text-sun sm:block" />
           <span>{settings.announcement}</span>
         </div>
@@ -45,7 +45,7 @@ export function StoreShell({ settings, categories, children }: { settings: Setti
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Fale conosco pelo WhatsApp"
-        className="fixed right-4 bottom-4 z-30 grid size-15 place-items-center rounded-full bg-[#25D366] text-white shadow-[0_8px_22px_rgb(37_211_102/.45)] transition hover:scale-110 print:hidden"
+        className="ping-ring fixed right-4 bottom-4 z-30 grid size-15 place-items-center rounded-full bg-[#25D366] text-white shadow-[0_8px_22px_rgb(37_211_102/.45)] transition hover:scale-110 print:hidden"
       >
         <WhatsAppIcon className="size-8" />
       </a>
