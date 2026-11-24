@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard, Package, Percent, Settings, ShoppingBag, Tags, Truck, Users } from "lucide-react";
+import { LayoutDashboard, Package, Percent, Settings, ShieldCheck, ShoppingBag, Tags, Truck, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -13,6 +13,7 @@ const items = [
   { href: "/admin/cupons", label: "Cupons", Icon: Percent },
   { href: "/admin/clientes", label: "Clientes", Icon: Users },
   { href: "/admin/configuracoes", label: "Configurações", Icon: Settings },
+  { href: "/admin/registro", label: "Segurança", Icon: ShieldCheck },
 ];
 
 /** Menu do painel: barra rolável no celular, coluna lateral no computador. */

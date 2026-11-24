@@ -7,6 +7,7 @@ import type { AdminState } from "@/components/admin/ui";
 import { deleteProduct, getProductById, listCategories, saveProduct, setStock } from "@/lib/server/catalog";
 import { fieldErrorsOf, formText, isChecked, moneyField, optionalMoney, uploadedFile } from "@/lib/server/form";
 import { deleteImageIfUnused, storeUpload } from "@/lib/server/images";
+import { audit } from "@/lib/server/audit";
 import { requireAdmin } from "@/lib/server/users";
 import { TINT_NAMES } from "@/lib/types";
 
@@ -34,7 +35,7 @@ const schema = z.object({
 });
 
 export async function saveProductAction(_prev: AdminState, fd: FormData): Promise<AdminState> {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const raw = formText(fd);
   const parsed = schema.safeParse({ ...raw, price: raw.saleMode === "consulta" && !raw.price ? "0" : raw.price });
   if (!parsed.success) return { error: "Confira os campos destacados.", fieldErrors: fieldErrorsOf(parsed.error) };
@@ -61,25 +62,30 @@ export async function saveProductAction(_prev: AdminState, fd: FormData): Promis
 
   saveProduct({ ...d, imageId, featured: isChecked(fd, "featured"), active: isChecked(fd, "active") }, id);
   if (existing?.imageId && existing.imageId !== imageId) deleteImageIfUnused(existing.imageId);
+  await audit(admin.email, "produto_salvo", d.name);
 
   redirect(`/admin/produtos?salvo=${encodeURIComponent(d.name)}`);
 }
 
 export async function deleteProductAction(fd: FormData) {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const product = getProductById(String(fd.get("id") ?? ""));
   if (product) {
     deleteProduct(product.id);
     deleteImageIfUnused(product.imageId);
+    await audit(admin.email, "produto_apagado", product.name);
   }
   redirect("/admin/produtos");
 }
 
 /** Atualização rápida de estoque direto na lista de produtos */
 export async function updateStockAction(fd: FormData) {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const id = String(fd.get("id") ?? "");
   const stock = Number(fd.get("stock"));
-  if (id && Number.isInteger(stock) && stock >= 0 && stock <= 1_000_000) setStock(id, stock);
+  if (id && Number.isInteger(stock) && stock >= 0 && stock <= 1_000_000) {
+    setStock(id, stock);
+    await audit(admin.email, "estoque", `${getProductById(id)?.name ?? id}: ${stock}`);
+  }
   refresh();
 }
