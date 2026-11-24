@@ -34,17 +34,43 @@ Feita com **Next.js 16**, **React 19**, **TypeScript**, **Tailwind CSS v4** e **
 | **Entregas** | Dias de retirada e regiões de entrega (taxa, grátis acima de, dias da rota) |
 | **Cupons** | Código, % de desconto, compra mínima, pausar/reativar, quantas vezes foi usado |
 | **Clientes** | Quem tem cadastro, nº de pedidos e total gasto, atalho para o WhatsApp |
-| **Configurações** | **Nome, logo e cores da loja**, textos da página inicial, contato, endereço, redes sociais, chave Pix, domínio e troca de senha |
+| **Configurações** | **Nome, logo e cores da loja**, textos da página inicial, contato, endereço, redes sociais, chave Pix, domínio, dados de privacidade (LGPD) e troca de senha |
+| **Segurança** | Registro de quem entrou no painel e do que foi alterado, com alerta de tentativas de login com senha errada |
 
 ### Segurança
 
-- Preços, estoque, taxas e descontos são **recalculados no servidor**. O navegador não consegue alterar valores.
-- O estoque baixa numa transação junto com o pedido: dois clientes não compram a última unidade ao mesmo tempo.
-- Senhas com `scrypt`, sessão em cookie `httpOnly` assinado (HMAC), mesma mensagem para e-mail inexistente e senha errada.
-- Toda página e ação do painel confere se quem está logado é administrador.
-- Upload só aceita JPG, PNG e WebP, conferidos pelo conteúdo do arquivo (SVG é recusado), até 3 MB.
-- Pedido de cliente cadastrado só aparece para ele; pedido sem cadastro tem link com código aleatório.
-- O site não pede nem guarda dados de cartão.
+O painel fica em `/admin`, mas **só abre com login de administrador**: sem login, qualquer página do painel leva para a tela de entrada, e toda ação (salvar produto, mudar pedido, trocar configurações) confere no servidor se quem está logado é administrador. Esconder o endereço não protege nada (robôs testam `/admin`, `/wp-admin` etc. em qualquer site); a proteção é a senha e as camadas abaixo.
+
+| Proteção | Como funciona |
+| --- | --- |
+| **Senha forte no painel** | Mínimo de 10 caracteres com maiúsculas, minúsculas e números. A senha inicial (das variáveis de ambiente) **precisa ser trocada no primeiro acesso** |
+| **Bloqueio de tentativas** | 5 senhas erradas na mesma conta (ou 20 no mesmo IP) bloqueiam o login por 15 minutos |
+| **Sessão** | Cookie `httpOnly` assinado (HMAC). Painel desconecta em 12 horas. Trocar a senha derruba as sessões de outros aparelhos |
+| **Senhas guardadas** | `scrypt` (criptografia de mão única): nem quem tem o banco consegue ler as senhas |
+| **Registro de acessos** | Painel > Segurança mostra logins, senhas erradas, bloqueios e alterações (quem, o quê, quando, IP). Guardado por 12 meses |
+| **Cabeçalhos HTTP** | Impede abrir o site dentro de outro (`X-Frame-Options`, `frame-ancestors`), HTTPS obrigatório em produção (HSTS), `nosniff`, sem `X-Powered-By`, páginas com dados pessoais sem cache |
+| **Valores no servidor** | Preços, estoque, taxas e descontos são recalculados no servidor; o estoque baixa numa transação junto com o pedido |
+| **Uploads** | Só JPG, PNG e WebP, conferidos pelo conteúdo do arquivo (SVG é recusado), até 3 MB |
+| **Pedidos** | Pedido de cliente cadastrado só aparece para ele; pedido sem cadastro tem link com código aleatório. O site não pede nem guarda dados de cartão |
+
+### LGPD (Lei 13.709/2018)
+
+| Exigência | No sistema |
+| --- | --- |
+| **Transparência** | Política de Privacidade completa, montada com os dados da loja: controlador (razão social, CNPJ), encarregado, dados coletados, finalidade e base legal, compartilhamento, prazo de guarda, cookies e direitos |
+| **Consentimento registrado** | Checkbox obrigatório de aceite da política no pedido e no cadastro, com data e hora guardadas |
+| **Acesso e portabilidade** | Em Minha conta, o cliente baixa todos os seus dados (JSON) |
+| **Exclusão** | O cliente exclui a própria conta (com senha). O lojista exclui um cliente em Painel > Clientes, ou remove os dados de um pedido sem cadastro na tela do pedido. Os pedidos ficam (registro de venda), sem dados pessoais |
+| **Prazo de guarda** | Pedidos concluídos ou cancelados perdem nome, telefone, e-mail e endereço depois de X meses (padrão 24, ajustável em Configurações) |
+| **Minimização** | Só o necessário para entregar o pedido; e-mail opcional; sem cookies de propaganda (por isso não há banner de cookies) |
+| **Segurança** | As proteções da seção anterior (art. 46) |
+
+**O que fica com o lojista (não é código):**
+
+- Preencher em Configurações o **encarregado** e o e-mail de privacidade, e revisar a política com o contador/advogado.
+- Responder pedidos de clientes sem cadastro em até 15 dias.
+- Ter um **contrato** com você (quem mantém o sistema) dizendo que a loja é a controladora e você é o operador dos dados.
+- Avisar a ANPD e os clientes em caso de vazamento.
 
 ## Como rodar
 
@@ -82,13 +108,13 @@ Uma VPS simples (2 GB de RAM, a partir de ~R$ 30/mês em Hostinger, Contabo, Dig
 2. **No servidor:** instale o Docker, clone este repositório e entre em `deploy/`.
 3. Copie `deploy/.env.example` para `deploy/.env` e preencha domínio, segredo e e-mail/senha inicial de cada loja.
 4. `docker compose up -d --build`
-5. Em alguns minutos cada domínio abre com **HTTPS automático**. O lojista entra em `https://dominio/admin`, troca a senha e configura a loja.
+5. Em alguns minutos cada domínio abre com **HTTPS automático**. O lojista entra em `https://dominio/admin` com a senha inicial, é obrigado a criar uma senha própria e configura a loja.
 
 Para a 3ª loja: copie um bloco `loja-...` no `docker-compose.yml`, um bloco no `Caddyfile` e as variáveis no `.env`.
 
 **Atualizar todas as lojas** depois de mudar o código: `git pull && docker compose up -d --build`. Os dados ficam nos volumes e não se perdem.
 
-**Backup** (faça todo dia, por exemplo com cron):
+**Backup** (faça todo dia, por exemplo com cron). O backup contém dados pessoais: guarde num lugar com acesso restrito e, se for para a nuvem, criptografado:
 
 ```bash
 docker compose exec loja-a node -e "new (require('node:sqlite').DatabaseSync)('/data/loja.db').exec(\"VACUUM INTO '/data/backup.db'\")"
@@ -113,7 +139,7 @@ docker compose cp loja-a:/data/backup.db ./backup-loja-a-$(date +%F).db
 | `npm run build` / `npm start` | Build e servidor de produção |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | Tipos das rotas + TypeScript |
-| `npm test` | Testes (preços, cupons, entrega, Pix, datas, senha e sessão) |
+| `npm test` | Testes (preços, cupons, entrega, Pix, datas, senhas e sessão) |
 
 ## Estrutura
 
