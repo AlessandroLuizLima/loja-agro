@@ -138,6 +138,19 @@ const MIGRATIONS = [
   );
   CREATE INDEX audit_log_at_idx ON audit_log(at DESC);
   `,
+  // 3: verificação em duas etapas (código do aplicativo autenticador) e códigos de recuperação
+  `
+  ALTER TABLE users ADD COLUMN totp_secret TEXT;
+  ALTER TABLE users ADD COLUMN totp_enabled INTEGER NOT NULL DEFAULT 0;
+  ALTER TABLE users ADD COLUMN totp_last_step INTEGER NOT NULL DEFAULT 0;
+
+  CREATE TABLE recovery_codes (
+    user_id   TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    code_hash TEXT NOT NULL,
+    used_at   TEXT
+  );
+  CREATE INDEX recovery_codes_user_idx ON recovery_codes(user_id);
+  `,
 ];
 
 const globalForDb = globalThis as unknown as { lojaDb?: DatabaseSync };
@@ -170,6 +183,18 @@ function migrate(conn: DatabaseSync) {
  * só se a loja ainda não tiver nenhum. Depois disso as variáveis são ignoradas.
  */
 function ensureAdmin(conn: DatabaseSync) {
+  // Celular perdido e sem códigos de recuperação: ADMIN_DISABLE_2FA=email desliga a verificação dessa conta ao reiniciar
+  const reset2fa = process.env.ADMIN_DISABLE_2FA?.trim().toLowerCase();
+  if (reset2fa) {
+    const { changes } = conn
+      .prepare("UPDATE users SET totp_enabled = 0, totp_secret = NULL, session_version = session_version + 1 WHERE email = ? AND role = 'admin' AND totp_enabled = 1")
+      .run(reset2fa);
+    if (Number(changes) > 0) {
+      conn.prepare("INSERT INTO audit_log (user_email, action, detail) VALUES (?, '2fa_desativada', 'pela variável ADMIN_DISABLE_2FA')").run(reset2fa);
+      console.warn(`[loja] Verificação em duas etapas desativada para ${reset2fa}. Remova ADMIN_DISABLE_2FA e ative de novo pelo painel.`);
+    }
+  }
+
   const email = process.env.ADMIN_EMAIL?.trim().toLowerCase();
   const password = process.env.ADMIN_PASSWORD;
   if (!email || !password) return;
