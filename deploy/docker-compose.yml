@@ -1,0 +1,61 @@
+# Duas lojas no mesmo servidor (VPS), cada uma com seu domínio, banco e painel.
+# Para uma 3ª loja: copie um bloco "loja-...", troque o nome, o volume e as variáveis,
+# e acrescente o domínio dela no Caddyfile.
+#
+# Uso (dentro desta pasta, no servidor):
+#   cp .env.example .env      # e preencha os segredos
+#   docker compose up -d --build
+
+x-loja: &loja
+  build: ..
+  image: loja-agro:latest
+  restart: unless-stopped
+  environment: &env
+    SEED_DEMO: "false" # loja de cliente começa vazia; o lojista cadastra pelo painel
+
+services:
+  loja-a:
+    <<: *loja
+    environment:
+      <<: *env
+      SITE_URL: https://${LOJA_A_DOMINIO}
+      SESSION_SECRET: ${LOJA_A_SESSION_SECRET:?defina LOJA_A_SESSION_SECRET no .env}
+      ADMIN_EMAIL: ${LOJA_A_ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${LOJA_A_ADMIN_PASSWORD}
+    volumes:
+      - loja-a-dados:/data
+
+  loja-b:
+    <<: *loja
+    environment:
+      <<: *env
+      SITE_URL: https://${LOJA_B_DOMINIO}
+      SESSION_SECRET: ${LOJA_B_SESSION_SECRET:?defina LOJA_B_SESSION_SECRET no .env}
+      ADMIN_EMAIL: ${LOJA_B_ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${LOJA_B_ADMIN_PASSWORD}
+    volumes:
+      - loja-b-dados:/data
+
+  # Caddy recebe os acessos, manda cada domínio para a loja certa e cuida do HTTPS (certificado grátis e automático)
+  caddy:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      LOJA_A_DOMINIO: ${LOJA_A_DOMINIO}
+      LOJA_B_DOMINIO: ${LOJA_B_DOMINIO}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-dados:/data
+      - caddy-config:/config
+    depends_on:
+      - loja-a
+      - loja-b
+
+volumes:
+  loja-a-dados:
+  loja-b-dados:
+  caddy-dados:
+  caddy-config:

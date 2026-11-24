@@ -1,0 +1,12 @@
+# Um bloco por loja. O Caddy emite e renova o HTTPS sozinho
+# (o domínio precisa já estar apontando para o IP deste servidor).
+
+{$LOJA_A_DOMINIO}, www.{$LOJA_A_DOMINIO} {
+	encode zstd gzip
+	reverse_proxy loja-a:3000
+}
+
+{$LOJA_B_DOMINIO}, www.{$LOJA_B_DOMINIO} {
+	encode zstd gzip
+	reverse_proxy loja-b:3000
+}
