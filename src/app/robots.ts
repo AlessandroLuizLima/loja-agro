@@ -1,10 +1,11 @@
 import type { MetadataRoute } from "next";
+import { connection } from "next/server";
+import { getSettings, siteUrl } from "@/lib/server/settings";
 
-const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-
-export default function robots(): MetadataRoute.Robots {
+export default async function robots(): Promise<MetadataRoute.Robots> {
+  await connection();
   return {
-    rules: { userAgent: "*", allow: "/", disallow: ["/conta", "/checkout", "/carrinho", "/pedido", "/busca"] },
-    sitemap: `${base}/sitemap.xml`,
+    rules: { userAgent: "*", allow: "/", disallow: ["/admin", "/conta", "/checkout", "/carrinho", "/pedido", "/busca"] },
+    sitemap: `${siteUrl(getSettings())}/sitemap.xml`,
   };
 }
