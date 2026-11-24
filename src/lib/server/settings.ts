@@ -31,6 +31,9 @@ export const DEFAULT_SETTINGS: Settings = {
   pickupDays: [1, 2, 3, 4, 5, 6],
   pickupNote: "Separamos em até 2 horas no horário de funcionamento.",
   siteUrl: "",
+  dpoName: "",
+  dpoEmail: "",
+  retentionMonths: 24,
 };
 
 export function getSettings(): Settings {

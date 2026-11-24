@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { changePasswordAction, saveSettingsAction } from "@/app/admin/actions/settings";
 import { formatPhone } from "@/lib/format";
 import { imageUrl, type Settings } from "@/lib/types";
@@ -70,6 +71,27 @@ export function SettingsForm({ settings: s }: { settings: Settings }) {
         </div>
       </Card>
 
+      <Card
+        title="Privacidade (LGPD)"
+        description="Aparece na Política de Privacidade. O encarregado é quem responde aos clientes sobre os dados pessoais deles; numa loja pequena pode ser o próprio dono."
+      >
+        <div className="grid gap-4 sm:grid-cols-6">
+          <Field className="sm:col-span-3" label="Encarregado pelos dados" name="dpoName" defaultValue={s.dpoName} error={e.dpoName} placeholder="Nome do responsável" />
+          <Field className="sm:col-span-3" label="E-mail para assuntos de privacidade" name="dpoEmail" type="email" defaultValue={s.dpoEmail} error={e.dpoEmail} hint="Em branco: usa o e-mail da loja." />
+          <Field
+            className="sm:col-span-3"
+            label="Apagar dados de pedidos antigos após (meses)"
+            name="retentionMonths"
+            type="number"
+            min={6}
+            max={120}
+            defaultValue={s.retentionMonths}
+            error={e.retentionMonths}
+            hint="Nome, telefone e endereço de pedidos concluídos são removidos depois desse prazo. Produtos e valores ficam."
+          />
+        </div>
+      </Card>
+
       <Card title="Endereço do site" description="O domínio da loja (usado no Google e nos links compartilhados).">
         <Field label="Domínio" name="siteUrl" defaultValue={s.siteUrl} error={e.siteUrl} placeholder="https://www.sualoja.com.br" />
       </Card>
@@ -96,13 +118,18 @@ function ColorField({ label, name, value, onChange }: { label: string; name: str
   );
 }
 
-export function PasswordForm() {
+/** Troca de senha. Com `doneHref`, vai para essa página depois de trocar (troca obrigatória do primeiro acesso). */
+export function PasswordForm({ doneHref }: { doneHref?: string }) {
   const [state, onSubmit, pending] = useFormAction<AdminState>(changePasswordAction, {});
+  const router = useRouter();
   const e = state.fieldErrors ?? {};
+  useEffect(() => {
+    if (state.ok && doneHref) router.replace(doneHref);
+  }, [state.ok, doneHref, router]);
   return (
     <form onSubmit={onSubmit} noValidate className="grid gap-4 sm:grid-cols-3">
       <Field label="Senha atual" name="current" type="password" autoComplete="current-password" required error={e.current} />
-      <Field label="Nova senha" name="password" type="password" autoComplete="new-password" required error={e.password} hint="Mínimo 8, com letras e números." />
+      <Field label="Nova senha" name="password" type="password" autoComplete="new-password" required error={e.password} hint="Mínimo 10, com maiúsculas, minúsculas e números." />
       <Field label="Repita a nova senha" name="confirm" type="password" autoComplete="new-password" required error={e.confirm} />
       <div className="flex flex-wrap items-center gap-3 sm:col-span-3">
         <SubmitButton pending={pending}>Trocar senha</SubmitButton>

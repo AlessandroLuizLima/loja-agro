@@ -100,6 +100,11 @@ export type Settings = {
   pickupDays: number[];
   pickupNote: string;
   siteUrl: string;
+  /** LGPD: encarregado pelos dados pessoais (quem atende os pedidos dos clientes sobre os dados) */
+  dpoName: string;
+  dpoEmail: string;
+  /** Meses até apagar os dados pessoais de pedidos concluídos ou cancelados */
+  retentionMonths: number;
 };
 
 /** Item do carrinho salvo no navegador. Os dados do produto são uma cópia para exibição: o servidor recalcula tudo. */
