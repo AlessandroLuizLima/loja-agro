@@ -3,7 +3,11 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Card, EmptyState, PageHeader } from "@/components/admin/ui";
 import { formatDateTime } from "@/lib/format";
+import Link from "next/link";
+import { adminUrl } from "@/lib/admin-path";
 import { AUDIT_LABELS, countLoginAlerts, listAudit } from "@/lib/server/audit";
+import { twoFactorStatus } from "@/lib/server/two-factor";
+import { requireAdmin } from "@/lib/server/users";
 
 export const metadata: Metadata = { title: "Segurança" };
 
@@ -13,6 +17,8 @@ export default async function AuditPage() {
   await connection();
   const entries = listAudit(300);
   const alerts = countLoginAlerts(7);
+  const admin = await requireAdmin();
+  const twoFactor = twoFactorStatus(admin.id).enabled;
 
   return (
     <>
@@ -28,6 +34,16 @@ export default async function AuditPage() {
             <li>• Sessão do painel expira em 12 horas</li>
             <li>• Trocar a senha desconecta os outros aparelhos</li>
             <li>• Dados de pedidos antigos removidos automaticamente (LGPD)</li>
+            <li className={twoFactor ? "" : "font-semibold text-amber-800"}>
+              • Verificação em duas etapas:{" "}
+              {twoFactor ? (
+                "ativada"
+              ) : (
+                <Link href={adminUrl("/configuracoes#duas-etapas")} className="underline">
+                  desativada, ative agora
+                </Link>
+              )}
+            </li>
           </ul>
         </Card>
         <Card>
