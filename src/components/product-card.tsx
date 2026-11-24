@@ -25,10 +25,12 @@ export function ProductCard({ product, store }: { product: Product; store: Store
   const stock = stockText(product);
 
   return (
-    <article className="reveal group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-card transition duration-300 hover:-translate-y-1 hover:shadow-lift">
+    <article className="reveal group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-card ring-1 ring-line/70 transition duration-300 hover:-translate-y-1.5 hover:shadow-lift hover:ring-brand/40">
       <Link href={href} tabIndex={-1} aria-hidden="true" className="relative block">
         {off > 0 && <span className="badge bg-red-500 text-white">-{off}%</span>}
-        <ProductImage item={product} className="aspect-square transition duration-300 group-hover:scale-105" emojiClassName="text-6xl lg:text-7xl" />
+        <div className="overflow-hidden">
+          <ProductImage item={product} className="aspect-square transition duration-500 ease-out group-hover:scale-108" emojiClassName="text-6xl transition duration-500 group-hover:-rotate-6 lg:text-7xl" />
+        </div>
       </Link>
 
       <div className="flex flex-1 flex-col gap-1.5 p-3 lg:p-4">
@@ -46,7 +48,10 @@ export function ProductCard({ product, store }: { product: Product; store: Store
             {store.pixPercent > 0 && <p className="text-xs font-semibold text-emerald-700">{brl(product.price * (1 - store.pixPercent / 100))} no Pix</p>}
           </div>
         )}
-        <p className={`text-xs font-semibold ${stock.tone}`}>{stock.text}</p>
+        <p className={`flex items-center gap-1.5 text-xs font-semibold ${stock.tone}`}>
+          <span className="size-1.5 shrink-0 rounded-full bg-current" aria-hidden="true" />
+          {stock.text}
+        </p>
 
         {available ? (
           <AddToCartButton product={toSnapshot(product)} />
