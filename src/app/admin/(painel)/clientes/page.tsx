@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
+import { Trash2 } from "lucide-react";
+import { deleteCustomerAction } from "@/app/admin/actions/customers";
+import { ConfirmSubmit } from "@/components/admin/client-buttons";
 import { EmptyState, PageHeader } from "@/components/admin/ui";
 import { WhatsAppIcon } from "@/components/icons";
 import { brl, formatDate } from "@/lib/format";
@@ -13,7 +16,7 @@ export default async function CustomersPage() {
   const customers = listCustomers();
   return (
     <>
-      <PageHeader title="Clientes cadastrados" subtitle="Quem criou conta no site. Pedidos sem cadastro aparecem só em Pedidos." />
+      <PageHeader title="Clientes cadastrados" subtitle="Quem criou conta no site. Pedidos sem cadastro aparecem só em Pedidos. Se um cliente pedir a exclusão dos dados (LGPD), use a lixeira." />
       {customers.length === 0 ? (
         <EmptyState emoji="👥" text="Nenhum cliente cadastrado ainda." />
       ) : (
@@ -36,6 +39,15 @@ export default async function CustomersPage() {
                   <WhatsAppIcon className="size-5" />
                 </a>
               )}
+              <form action={deleteCustomerAction}>
+                <input type="hidden" name="id" value={c.id} />
+                <ConfirmSubmit
+                  message={`Excluir a conta de ${c.name}? Os pedidos continuam registrados, mas sem nome, telefone e endereço. Use quando o cliente pedir. Não dá para desfazer.`}
+                  className="grid size-10 place-items-center rounded-xl border-2 border-line text-muted transition hover:border-red-300 hover:text-red-600"
+                >
+                  <Trash2 className="size-4" aria-label={`Excluir dados de ${c.name}`} />
+                </ConfirmSubmit>
+              </form>
             </li>
           ))}
         </ul>

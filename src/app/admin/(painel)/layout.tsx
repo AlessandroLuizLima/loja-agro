@@ -5,6 +5,7 @@ import { connection } from "next/server";
 import { signOut } from "@/app/(loja)/conta/actions";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { countOrdersByStatus } from "@/lib/server/orders";
+import { runRetentionIfDue } from "@/lib/server/privacy";
 import { getSettings } from "@/lib/server/settings";
 import { requireAdmin } from "@/lib/server/users";
 
@@ -14,6 +15,8 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   await connection();
   const admin = await requireAdmin();
   const settings = getSettings();
+  // LGPD: remove os dados pessoais de pedidos antigos (no máximo a cada 6 horas)
+  runRetentionIfDue(settings.retentionMonths);
   const newOrders = countOrdersByStatus().novo ?? 0;
 
   return (

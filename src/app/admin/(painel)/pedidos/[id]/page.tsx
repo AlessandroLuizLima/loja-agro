@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
-import { setOrderStatusAction, setPaymentStatusAction } from "@/app/admin/actions/orders";
+import { anonymizeOrderAction, setOrderStatusAction, setPaymentStatusAction } from "@/app/admin/actions/orders";
 import { ConfirmSubmit, PrintButton } from "@/components/admin/client-buttons";
 import { Card } from "@/components/admin/ui";
 import { WhatsAppIcon } from "@/components/icons";
@@ -178,14 +178,31 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/pedid
 
           <Card title="Cliente">
             <p className="font-semibold">{customer.name}</p>
-            <p className="flex items-center gap-1.5 text-sm text-muted">
-              <Phone className="size-4" /> {customer.phone}
-            </p>
-            {customer.email && <p className="text-sm break-all text-muted">{customer.email}</p>}
-            <a href={waLink(customer.phone, message)} target="_blank" rel="noopener noreferrer" className="btn mt-4 h-11 w-full bg-[#25D366] text-sm text-white hover:bg-[#1ebe5a]">
-              <WhatsAppIcon className="size-5" /> Avisar no WhatsApp
-            </a>
-            <p className="mt-2 rounded-xl bg-cream p-3 text-xs text-muted">“{message}”</p>
+            {customer.phone ? (
+              <>
+                <p className="flex items-center gap-1.5 text-sm text-muted">
+                  <Phone className="size-4" /> {customer.phone}
+                </p>
+                {customer.email && <p className="text-sm break-all text-muted">{customer.email}</p>}
+                <a href={waLink(customer.phone, message)} target="_blank" rel="noopener noreferrer" className="btn mt-4 h-11 w-full bg-[#25D366] text-sm text-white hover:bg-[#1ebe5a]">
+                  <WhatsAppIcon className="size-5" /> Avisar no WhatsApp
+                </a>
+                <p className="mt-2 rounded-xl bg-cream p-3 text-xs text-muted">“{message}”</p>
+              </>
+            ) : (
+              <p className="mt-1 text-sm text-muted">Os dados pessoais deste pedido foram removidos (LGPD). Produtos e valores continuam registrados.</p>
+            )}
+            {customer.phone && (order.status === "concluido" || order.status === "cancelado") && (
+              <form action={anonymizeOrderAction} className="mt-4 border-t border-line pt-3">
+                <input type="hidden" name="id" value={order.id} />
+                <ConfirmSubmit
+                  message={`Remover nome, telefone, e-mail e endereço do pedido #${order.number}? Use quando o cliente pedir a exclusão dos dados. Não dá para desfazer.`}
+                  className="text-xs font-semibold text-red-600 hover:underline"
+                >
+                  Remover dados pessoais (pedido do cliente)
+                </ConfirmSubmit>
+              </form>
+            )}
           </Card>
         </div>
       </div>
