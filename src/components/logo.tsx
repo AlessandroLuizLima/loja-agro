@@ -1,11 +1,25 @@
+import { Sprout } from "lucide-react";
 import Link from "next/link";
-import { PawIcon } from "./icons";
+import { imageUrl } from "@/lib/types";
 
-export function Logo({ light = false }: { light?: boolean }) {
+/** Logo enviado no painel ou, sem logo, o nome da loja em duas cores. */
+export function Logo({ name, logoImageId, light = false, href = "/" }: { name: string; logoImageId: string | null; light?: boolean; href?: string }) {
+  const src = imageUrl(logoImageId);
+  const [first, ...rest] = name.split(" ");
   return (
-    <Link href="/" aria-label="PetHouse - página inicial" className={`flex items-center gap-1.5 font-display text-2xl font-bold lg:text-[1.7rem] ${light ? "text-white" : "text-petrol"}`}>
-      <PawIcon className="size-8 text-brand" />
-      Pet<span className="text-brand">House</span>
+    <Link href={href} aria-label={`${name} – página inicial`} className={`flex items-center gap-1.5 font-display text-xl leading-none font-bold lg:text-2xl ${light ? "text-white" : "text-petrol"}`}>
+      {src ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt={name} className={`h-11 w-auto max-w-44 object-contain lg:h-12 ${light ? "rounded-lg bg-white p-1" : ""}`} />
+      ) : (
+        <>
+          <Sprout className="size-8 shrink-0 text-brand" strokeWidth={2.4} />
+          <span>
+            {first}
+            {rest.length > 0 && <span className="text-brand"> {rest.join(" ")}</span>}
+          </span>
+        </>
+      )}
     </Link>
   );
 }

@@ -3,31 +3,28 @@
 import { Flame, Menu, Search, ShoppingCart, User, X } from "lucide-react";
 import Link from "next/link";
 import { useRef, type ReactNode } from "react";
-import { menuCollections } from "@/lib/catalog";
 import { useCart } from "./cart-provider";
-import { Logo } from "./logo";
+
+type NavCategory = { slug: string; name: string; emoji: string };
 
 /**
- * Cabeçalho da loja. `account` é um Server Component (lê o cookie de sessão)
- * que chega já dentro de um <Suspense>, então o resto do cabeçalho é estático.
+ * Cabeçalho da loja. `logo` e `account` chegam prontos do servidor
+ * (o de conta dentro de um <Suspense>, porque lê o cookie de sessão).
  */
-export function Header({ account, drawerAccount }: { account: ReactNode; drawerAccount: ReactNode }) {
+export function Header({ logo, account, drawerAccount, categories }: { logo: ReactNode; account: ReactNode; drawerAccount: ReactNode; categories: NavCategory[] }) {
   const { count, ready, openDrawer } = useCart();
   const menu = useRef<HTMLDialogElement>(null);
   const close = () => menu.current?.close();
-  const links = menuCollections();
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-white/90 shadow-[0_2px_12px_rgb(31_78_95/.06)] backdrop-blur-md">
+      <header className="sticky top-0 z-40 bg-white/90 shadow-[0_2px_12px_rgb(30_50_30/.06)] backdrop-blur-md">
         <div className="container-page flex flex-wrap items-center gap-2.5 py-3 lg:flex-nowrap lg:gap-6 lg:py-4">
           <button type="button" aria-label="Abrir menu" onClick={() => menu.current?.showModal()} className="icon-btn lg:hidden">
             <Menu className="size-6" />
           </button>
 
-          <div className="mr-auto lg:mr-0">
-            <Logo />
-          </div>
+          <div className="mr-auto min-w-0 lg:mr-0">{logo}</div>
 
           <form role="search" action="/busca" className="relative order-last basis-full lg:order-none lg:mx-auto lg:max-w-xl lg:flex-1 lg:basis-auto">
             <label htmlFor="q" className="sr-only">
@@ -39,7 +36,7 @@ export function Header({ account, drawerAccount }: { account: ReactNode; drawerA
               type="search"
               required
               minLength={2}
-              placeholder="O que seu pet precisa hoje?"
+              placeholder="Ração, sal mineral, sementes…"
               className="h-12 w-full rounded-full border-2 border-line bg-cream pr-14 pl-5 outline-none transition focus:border-brand"
             />
             <button type="submit" aria-label="Buscar" className="absolute top-1 right-1 grid size-10 place-items-center rounded-full bg-brand text-white transition hover:bg-brand-dark">
@@ -61,16 +58,16 @@ export function Header({ account, drawerAccount }: { account: ReactNode; drawerA
 
         <nav aria-label="Categorias" className="border-t border-line">
           <ul className="container-page no-scrollbar flex gap-1 overflow-x-auto py-2 lg:justify-center lg:gap-2">
-            {links.map((l) => (
-              <li key={l.slug}>
-                <Link href={`/categoria/${l.slug}`} className="block rounded-full px-3.5 py-2 text-sm font-medium whitespace-nowrap text-petrol transition hover:bg-petrol-soft">
-                  {l.name}
+            {categories.map((c) => (
+              <li key={c.slug}>
+                <Link href={`/categoria/${c.slug}`} className="block rounded-full px-3.5 py-2 text-sm font-medium whitespace-nowrap text-petrol transition hover:bg-petrol-soft">
+                  {c.name}
                 </Link>
               </li>
             ))}
             <li>
-              <Link href="/categoria/promocoes" className="flex items-center gap-1 rounded-full bg-brand-soft px-3.5 py-2 text-sm font-bold whitespace-nowrap text-brand-dark">
-                <Flame className="size-4" /> Promoções
+              <Link href="/ofertas" className="flex items-center gap-1 rounded-full bg-brand-soft px-3.5 py-2 text-sm font-bold whitespace-nowrap text-brand-dark">
+                <Flame className="size-4" /> Ofertas
               </Link>
             </li>
           </ul>
@@ -88,25 +85,30 @@ export function Header({ account, drawerAccount }: { account: ReactNode; drawerA
         className="drawer m-0 h-dvh max-h-none w-[min(84vw,320px)] bg-white p-0 backdrop:bg-petrol-dark/50 backdrop:backdrop-blur-sm"
       >
         <div className="flex h-full flex-col overflow-y-auto p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <Logo />
-            <button type="button" aria-label="Fechar menu" onClick={close} className="icon-btn">
+          <div className="mb-4 flex items-center justify-between gap-2">
+            {logo}
+            <button type="button" aria-label="Fechar menu" onClick={close} className="icon-btn shrink-0">
               <X className="size-6" />
             </button>
           </div>
           {drawerAccount}
           <ul>
-            {links.map((l) => (
-              <li key={l.slug}>
-                <Link href={`/categoria/${l.slug}`} className="flex items-center gap-3 border-b border-line px-2 py-3.5 font-semibold text-petrol">
-                  <span className="text-xl">{l.emoji}</span>
-                  {l.name}
+            {categories.map((c) => (
+              <li key={c.slug}>
+                <Link href={`/categoria/${c.slug}`} className="flex items-center gap-3 border-b border-line px-2 py-3.5 font-semibold text-petrol">
+                  <span className="text-xl">{c.emoji}</span>
+                  {c.name}
                 </Link>
               </li>
             ))}
             <li>
-              <Link href="/categoria/promocoes" className="flex items-center gap-3 border-b border-line px-2 py-3.5 font-semibold text-brand-dark">
-                <span className="text-xl">🔥</span> Promoções
+              <Link href="/ofertas" className="flex items-center gap-3 border-b border-line px-2 py-3.5 font-semibold text-brand-dark">
+                <span className="text-xl">🔥</span> Ofertas
+              </Link>
+            </li>
+            <li>
+              <Link href="/ajuda/entregas-e-retirada" className="flex items-center gap-3 border-b border-line px-2 py-3.5 font-semibold text-petrol">
+                <span className="text-xl">🚚</span> Entregas e retirada
               </Link>
             </li>
             <li>

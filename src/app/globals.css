@@ -1,31 +1,32 @@
 @import "tailwindcss";
 
-/* ===== Design tokens da PetHouse (Tailwind v4: viram utilitários bg-brand, text-petrol, shadow-card…) ===== */
+/* ===== Design tokens da loja (Tailwind v4: viram utilitários bg-brand, text-petrol, shadow-card…) ===== */
 @theme inline {
   --font-display: var(--font-poppins), ui-rounded, system-ui, sans-serif;
   --font-sans: var(--font-inter), system-ui, sans-serif;
 }
 
 @theme {
-  --color-brand: #ff8a3d;
-  --color-brand-dark: #e8701f;
-  --color-brand-soft: #ffe7d6;
-  --color-petrol: #1f4e5f;
-  --color-petrol-dark: #163a47;
-  --color-petrol-soft: #e3eef1;
+  /* brand e petrol são as cores da loja (definidas no painel e aplicadas no layout); as demais derivam delas */
+  --color-brand: #e8862a;
+  --color-brand-dark: color-mix(in oklab, var(--color-brand) 80%, black);
+  --color-brand-soft: color-mix(in oklab, var(--color-brand) 16%, white);
+  --color-petrol: #2f5d2b;
+  --color-petrol-dark: color-mix(in oklab, var(--color-petrol) 78%, black);
+  --color-petrol-soft: color-mix(in oklab, var(--color-petrol) 11%, white);
   --color-sun: #ffd86b;
   --color-sun-soft: #fff6d9;
-  --color-cream: #fffbf5;
-  --color-ink: #1d2b30;
-  --color-muted: #5f6f75;
-  --color-line: #ece4d8;
-  --color-mint: #e6f6ec;
-  --color-sky: #eaf0ff;
-  --color-rose: #fdebf1;
+  --color-cream: #fdfbf6;
+  --color-ink: #1f2a22;
+  --color-muted: #5f6b62;
+  --color-line: #e9e3d6;
+  --color-mint: #e6f4e4;
+  --color-sky: #e8f0fb;
+  --color-rose: #fbece7;
 
-  --shadow-card: 0 4px 18px rgb(31 78 95 / 0.08);
-  --shadow-lift: 0 12px 30px rgb(31 78 95 / 0.16);
-  --shadow-glow: 0 8px 20px rgb(255 138 61 / 0.38);
+  --shadow-card: 0 4px 18px rgb(30 50 30 / 0.08);
+  --shadow-lift: 0 12px 30px rgb(30 50 30 / 0.16);
+  --shadow-glow: 0 8px 20px color-mix(in oklab, var(--color-brand) 38%, transparent);
 }
 
 @layer base {

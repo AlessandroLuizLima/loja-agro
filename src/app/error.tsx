@@ -6,7 +6,7 @@ export default function ErrorPage({ reset }: { error: Error & { digest?: string 
   return (
     <div className="container-page grid place-items-center py-16 text-center">
       <p className="mb-2 text-7xl" aria-hidden="true">
-        🙀
+        🐄
       </p>
       <h1 className="mb-2 text-3xl font-bold text-petrol">Ops, algo deu errado</h1>
       <p className="mb-6 max-w-md text-muted">Tivemos um problema ao carregar esta página. Tente de novo em instantes.</p>
