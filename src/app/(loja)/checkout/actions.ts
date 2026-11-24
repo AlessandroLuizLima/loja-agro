@@ -20,7 +20,7 @@ export type CheckoutState =
 
 const text = (max: number) => z.string().trim().max(max);
 
-const OPTIONAL_FIELDS = ["email", "pickupDate", "zoneId", "deliveryDate", "street", "number", "district", "reference", "onDelivery", "changeFor", "notes", "coupon"];
+const OPTIONAL_FIELDS = ["email", "pickupDate", "zoneId", "deliveryDate", "street", "number", "district", "reference", "onDelivery", "changeFor", "notes", "coupon", "privacy"];
 
 const schema = z
   .object({
@@ -40,6 +40,7 @@ const schema = z
     changeFor: text(12),
     notes: text(400),
     coupon: text(30),
+    privacy: z.literal("on", { error: "Para fazer o pedido, aceite a Política de Privacidade." }),
     items: z.string().transform((s, ctx) => {
       try {
         return z

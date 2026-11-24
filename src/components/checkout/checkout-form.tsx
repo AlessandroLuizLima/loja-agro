@@ -105,6 +105,8 @@ export function CheckoutForm({ config, user }: { config: CheckoutConfig; user: {
     );
   }
 
+  const privacyError = state.status === "error" ? state.fieldErrors?.privacy : undefined;
+
   return (
     <form
       // Envio manual (sem o reset automático do React): campos e escolhas continuam como estão se houver erro
@@ -309,6 +311,20 @@ export function CheckoutForm({ config, user }: { config: CheckoutConfig; user: {
             {state.message}
           </p>
         )}
+
+        <div>
+          <label className="flex items-start gap-2.5 text-sm">
+            <input type="checkbox" name="privacy" className="mt-0.5 size-5 shrink-0 accent-brand" aria-invalid={!!privacyError || undefined} />
+            <span>
+              Li e concordo com a{" "}
+              <Link href="/ajuda/politica-de-privacidade" target="_blank" className="font-semibold text-brand-dark underline">
+                Política de Privacidade
+              </Link>
+              . Meus dados serão usados só para separar, entregar e combinar este pedido.
+            </span>
+          </label>
+          {privacyError && <p className="mt-1 text-xs font-medium text-red-600">{privacyError}</p>}
+        </div>
 
         <button type="submit" disabled={pending || state.status === "success"} className="btn btn-primary h-14 w-full text-lg disabled:opacity-70">
           {pending && <Loader2 className="size-5 animate-spin" />}

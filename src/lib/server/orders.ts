@@ -49,8 +49,8 @@ export function createOrder(input: { userId: string | null; payload: OrderPayloa
     const p = input.payload;
     conn
       .prepare(
-        `INSERT INTO orders (id, number, user_id, status, payment_status, fulfillment, scheduled_date, customer_name, customer_phone, coupon_code, total, payload)
-         VALUES (?, ?, ?, 'novo', 'pendente', ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO orders (id, number, user_id, status, payment_status, fulfillment, scheduled_date, customer_name, customer_phone, coupon_code, total, payload, privacy_accepted_at)
+         VALUES (?, ?, ?, 'novo', 'pendente', ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
       )
       .run(id, next, input.userId, p.fulfillment.type, p.fulfillment.date, p.customer.name, p.customer.phone, p.totals.couponCode ?? null, p.totals.total, JSON.stringify(p));
     return { id, number: next };
