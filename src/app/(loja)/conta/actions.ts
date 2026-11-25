@@ -9,7 +9,11 @@ import { deleteCustomer } from "@/lib/server/privacy";
 import { blockedFor, clearAttempts, LIMITS, recordAttempt } from "@/lib/server/rate-limit";
 import { clientIp } from "@/lib/server/request";
 import { createSession, destroySession } from "@/lib/server/session";
-import { createUser, findUserByEmail, findUserById, getCurrentUser, sessionUser } from "@/lib/server/users";
+import { createUser, findUserByEmail, findUserById, getCurrentUser, sessionUser, updateContact, updatePassword } from "@/lib/server/users";
+import { refresh } from "next/cache";
+import { getSettings } from "@/lib/server/settings";
+import { confirmVerification, requestVerification } from "@/lib/server/verification";
+import { canVerify, type Channel } from "@/lib/server/messaging";
 
 export type AuthState = {
   error?: string;
@@ -117,4 +121,91 @@ export async function deleteAccount(_prev: DeleteAccountState, formData: FormDat
   await audit(null, "conta_excluida", `${orders} pedido(s) anonimizado(s)`);
   await destroySession();
   redirect("/");
+}
+
+/* ===== Minha conta: contatos, confirmação por código e senha ===== */
+
+export type ContactState = { error?: string; ok?: string; sent?: boolean; testCode?: string };
+
+const channelOf = (v: FormDataEntryValue | null): Channel | null => (v === "email" || v === "phone" ? v : null);
+
+async function customer() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/conta/entrar");
+  return user;
+}
+
+/** Envia (ou reenvia) o código de confirmação para o e-mail ou celular da conta. */
+export async function sendContactCode(_prev: ContactState, fd: FormData): Promise<ContactState> {
+  const user = await customer();
+  const channel = channelOf(fd.get("channel"));
+  if (!channel || !canVerify(channel)) return { error: "Confirmação indisponível." };
+  const target = channel === "email" ? user.email : user.phone;
+  if (!target) return { error: "Cadastre o celular primeiro." };
+  const sent = await requestVerification(user, channel, target, getSettings().storeName);
+  if (!sent.ok) return { error: sent.error };
+  return { sent: true, testCode: sent.testCode };
+}
+
+export async function confirmContactCode(_prev: ContactState, fd: FormData): Promise<ContactState> {
+  const user = await customer();
+  const channel = channelOf(fd.get("channel"));
+  if (!channel) return { error: "Pedido inválido." };
+  const result = confirmVerification(user.id, channel, String(fd.get("code") ?? ""), channel === "email" ? user.email : user.phone);
+  if (!result.ok) return { sent: true, error: result.error };
+  refresh();
+  return { ok: channel === "email" ? "E-mail confirmado." : "Celular confirmado." };
+}
+
+const phoneSchema = z.string().trim().regex(/^\(\d{2}\) \d{4,5}-\d{4}$/, "Informe o celular com DDD.");
+
+/** Troca o e-mail (pede a senha, porque o e-mail é o login) ou o celular. O contato novo precisa ser confirmado de novo. */
+export async function updateContactAction(_prev: ContactState, fd: FormData): Promise<ContactState> {
+  const user = await customer();
+  const channel = channelOf(fd.get("channel"));
+  const value = String(fd.get("value") ?? "").trim();
+  if (channel === "phone") {
+    const parsed = phoneSchema.safeParse(value);
+    if (!parsed.success) return { error: parsed.error.issues[0].message };
+    if (parsed.data === user.phone) return { error: "Esse já é o seu celular." };
+    updateContact(user.id, "phone", parsed.data);
+    refresh();
+    return { ok: "Celular atualizado." };
+  }
+  if (channel === "email") {
+    const parsed = z.email("E-mail inválido.").max(120).safeParse(value.toLowerCase());
+    if (!parsed.success) return { error: "E-mail inválido." };
+    if (parsed.data === user.email) return { error: "Esse já é o seu e-mail." };
+    const row = findUserById(user.id);
+    if (!row || !(await verifyPassword(String(fd.get("password") ?? ""), row.password_hash))) return { error: "Senha incorreta." };
+    if (findUserByEmail(parsed.data)) return { error: "Este e-mail já é usado por outra conta." };
+    updateContact(user.id, "email", parsed.data);
+    refresh();
+    return { ok: "E-mail atualizado. Você entra com o e-mail novo a partir de agora." };
+  }
+  return { error: "Pedido inválido." };
+}
+
+export type PasswordState = { error?: string; ok?: string; fieldErrors?: Partial<Record<"current" | "password" | "confirm", string>> };
+
+const customerPasswordSchema = z
+  .object({ current: z.string().min(1, "Informe a senha atual."), password: customerPassword, confirm: z.string() })
+  .refine((d) => d.password === d.confirm, { path: ["confirm"], message: "As senhas não conferem." })
+  .refine((d) => d.password !== d.current, { path: ["password"], message: "A nova senha precisa ser diferente da atual." });
+
+/** Troca de senha do cliente. Outros aparelhos conectados são desconectados. */
+export async function changeCustomerPassword(_prev: PasswordState, fd: FormData): Promise<PasswordState> {
+  const user = await customer();
+  if (user.role === "admin") return { error: "A senha do painel é trocada em Painel > Configurações." };
+  const parsed = customerPasswordSchema.safeParse(Object.fromEntries(fd));
+  if (!parsed.success) {
+    const fieldErrors: PasswordState["fieldErrors"] = {};
+    for (const i of parsed.error.issues) fieldErrors[i.path[0] as "current" | "password" | "confirm"] ??= i.message;
+    return { fieldErrors };
+  }
+  const row = findUserById(user.id);
+  if (!row || !(await verifyPassword(parsed.data.current, row.password_hash))) return { fieldErrors: { current: "Senha atual incorreta." } };
+  const updated = updatePassword(user.id, await hashPassword(parsed.data.password));
+  await createSession(sessionUser(updated));
+  return { ok: "Senha alterada. Se você estava conectado em outro aparelho, vai precisar entrar de novo lá." };
 }

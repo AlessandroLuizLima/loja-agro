@@ -1,12 +1,15 @@
-import { Download, LayoutDashboard, LogOut, Package, ShieldCheck } from "lucide-react";
+import { KeyRound, LayoutDashboard, LogOut, Package, UserRound } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
+import { ChangePasswordForm } from "@/components/account/change-password-form";
+import { ContactRow } from "@/components/account/contact-row";
 import { DeleteAccount } from "@/components/auth/delete-account";
 import { OrderStatusBadge } from "@/components/order-status-badge";
 import { ProductImage } from "@/components/product-image";
 import { longDate } from "@/lib/dates";
 import { brl, formatDate } from "@/lib/format";
+import { canVerify } from "@/lib/server/messaging";
 import { listOrdersByUser } from "@/lib/server/orders";
 import { requireUser } from "@/lib/server/users";
 import { signOut } from "./actions";
@@ -49,25 +52,9 @@ export default async function AccountPage() {
             </button>
           </form>
 
-          {user.role !== "admin" && (
-            <div className="mt-6 border-t border-line pt-5">
-              <p className="mb-1 flex items-center gap-2 text-sm font-semibold text-petrol">
-                <ShieldCheck className="size-4 text-brand" /> Seus dados
-              </p>
-              <p className="mb-3 text-xs text-muted">
-                Pela LGPD, você pode baixar ou excluir seus dados a qualquer momento.{" "}
-                <Link href="/ajuda/politica-de-privacidade" className="underline">
-                  Saiba mais
-                </Link>
-              </p>
-              <a href="/conta/meus-dados" download className="btn h-11 w-full border-2 border-line text-sm text-petrol hover:border-brand">
-                <Download className="size-4" /> Baixar meus dados
-              </a>
-              <DeleteAccount />
-            </div>
-          )}
         </aside>
 
+        <div className="min-w-0 space-y-6">
         <section className="rounded-3xl bg-white p-6 shadow-card">
           <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-petrol">
             <Package className="size-6 text-brand" /> Meus pedidos
@@ -106,6 +93,32 @@ export default async function AccountPage() {
             </ul>
           )}
         </section>
+
+        {user.role !== "admin" && (
+          <>
+            <section className="rounded-3xl bg-white p-6 shadow-card">
+              <h2 className="flex items-center gap-2 text-xl font-bold text-petrol">
+                <UserRound className="size-6 text-brand" /> Dados da conta
+              </h2>
+              <p className="mt-1 text-sm text-muted">Confirme seu e-mail e celular para a loja falar com você sobre os pedidos.</p>
+              <ul className="divide-y divide-line">
+                <ContactRow key={`e-${user.email}-${user.emailVerified}`} channel="email" value={user.email} verified={user.emailVerified} canVerify={canVerify("email")} />
+                <ContactRow key={`p-${user.phone}-${user.phoneVerified}`} channel="phone" value={user.phone} verified={user.phoneVerified} canVerify={canVerify("phone")} />
+              </ul>
+            </section>
+
+            <section className="rounded-3xl bg-white p-6 shadow-card">
+              <h2 className="mb-4 flex items-center gap-2 text-xl font-bold text-petrol">
+                <KeyRound className="size-6 text-brand" /> Alterar senha
+              </h2>
+              <ChangePasswordForm />
+              <div className="mt-6 border-t border-line pt-4">
+                <DeleteAccount />
+              </div>
+            </section>
+          </>
+        )}
+        </div>
       </div>
     </div>
   );
