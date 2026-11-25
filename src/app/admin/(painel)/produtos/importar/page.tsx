@@ -49,7 +49,7 @@ export default async function ImportPage() {
               <li>Clique em “Conferir planilha”: nada é gravado até você confirmar.</li>
             </ol>
             <p className="mt-3 text-xs text-muted">
-              Colunas: nome, categoria, preco, estoque (obrigatórias), preco_de, unidade, venda (online ou consulta), destaque e ativo (sim ou não), descricao. Categorias
+              Colunas: nome, categoria, preco, estoque (obrigatórias), preco_de, unidade, venda (online ou consulta), destaque e ativo (sim ou não), grupo e opcao (variações, ex.: grupo “racao-filhotes” e opção “10 kg”), descricao. Categorias
               que não existem são criadas. Fotos continuam sendo enviadas pelo painel.
             </p>
           </Card>

@@ -10,6 +10,7 @@ import { deleteImageIfUnused, storeUpload } from "@/lib/server/images";
 import { audit } from "@/lib/server/audit";
 import { requireAdmin } from "@/lib/server/users";
 import { TINT_NAMES } from "@/lib/types";
+import { slugify } from "@/lib/format";
 import { adminUrl } from "@/lib/admin-path";
 
 const schema = z.object({
@@ -23,6 +24,13 @@ const schema = z.object({
   emoji: z.string().trim().max(16).transform((v) => v || "📦"),
   tint: z.enum(TINT_NAMES),
   description: z.string().trim().max(3000),
+  // Variações: o grupo vira um código simples ("Ração Premium" -> "racao-premium") para casar sempre igual
+  variantGroup: z
+    .string()
+    .trim()
+    .max(60)
+    .transform((v) => slugify(v) || null),
+  variantLabel: z.string().trim().max(30),
   highlights: z
     .string()
     .max(2000)
@@ -44,6 +52,7 @@ export async function saveProductAction(_prev: AdminState, fd: FormData): Promis
 
   if (!listCategories({ activeOnly: false }).some((c) => c.id === d.categoryId)) return { error: "Categoria inválida.", fieldErrors: { categoryId: "Escolha a categoria." } };
   if (d.saleMode === "online" && d.price <= 0) return { error: "Confira os campos destacados.", fieldErrors: { price: "Informe o preço de venda." } };
+  if (d.variantGroup && !d.variantLabel) return { error: "Confira os campos destacados.", fieldErrors: { variantLabel: "Diga qual é esta opção (ex.: 15 kg)." } };
   if (d.oldPrice !== null && d.oldPrice <= d.price) return { error: "Confira os campos destacados.", fieldErrors: { oldPrice: "O preço antigo (\"de\") precisa ser maior que o preço atual." } };
 
   const id = raw.id || undefined;

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { ProductForm } from "@/components/admin/product-form";
 import { EmptyState, PageHeader } from "@/components/admin/ui";
-import { listCategories } from "@/lib/server/catalog";
+import { listCategories, listVariantGroups } from "@/lib/server/catalog";
 import { adminUrl } from "@/lib/admin-path";
 
 export const metadata: Metadata = { title: "Novo produto" };
@@ -21,7 +21,7 @@ export default async function NewProductPage() {
       {categories.length === 0 ? (
         <EmptyState emoji="🏷️" text="Crie uma categoria antes de cadastrar produtos." action={<Link href={adminUrl("/categorias")} className="btn btn-primary">Criar categoria</Link>} />
       ) : (
-        <ProductForm categories={categories} />
+        <ProductForm categories={categories} groups={listVariantGroups()} />
       )}
     </>
   );

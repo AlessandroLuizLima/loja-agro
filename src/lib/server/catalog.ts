@@ -82,6 +82,8 @@ type ProductRow = {
   featured: number;
   active: number;
   updated_at: string;
+  variant_group: string | null;
+  variant_label: string | null;
 };
 
 const toProduct = (r: ProductRow): Product => ({
@@ -104,6 +106,8 @@ const toProduct = (r: ProductRow): Product => ({
   featured: bool(r.featured),
   active: bool(r.active),
   updatedAt: r.updated_at,
+  variantGroup: r.variant_group,
+  variantLabel: r.variant_label,
 });
 
 const BASE = `SELECT p.*, c.slug AS category_slug, c.name AS category_name FROM products p JOIN categories c ON c.id = p.category_id`;
@@ -161,9 +165,8 @@ export function getProductsBySlugs(slugs: string[]) {
 }
 
 export function relatedProducts(product: Product, limit = 4) {
-  return listProducts({ categoryId: product.categoryId })
-    .filter((p) => p.id !== product.id)
-    .slice(0, limit);
+  // Outras opções do mesmo produto já aparecem no seletor; aqui vão só produtos diferentes
+  return collapseVariants(listProducts({ categoryId: product.categoryId }).filter((p) => p.id !== product.id && (!p.variantGroup || p.variantGroup !== product.variantGroup))).slice(0, limit);
 }
 
 export function lowStockProducts(threshold = 5) {
@@ -189,6 +192,8 @@ export type ProductInput = {
   saleMode: SaleMode;
   featured: boolean;
   active: boolean;
+  variantGroup: string | null;
+  variantLabel: string | null;
 };
 
 export function saveProduct(input: ProductInput, id?: string) {
@@ -208,12 +213,14 @@ export function saveProduct(input: ProductInput, id?: string) {
     input.saleMode,
     input.featured ? 1 : 0,
     input.active ? 1 : 0,
+    input.variantGroup || null,
+    input.variantGroup ? input.variantLabel || null : null,
   ];
   if (id) {
     conn
       .prepare(
         `UPDATE products SET name = ?, category_id = ?, price = ?, old_price = ?, unit = ?, stock = ?, image_id = ?, emoji = ?, tint = ?,
-         description = ?, highlights = ?, sale_mode = ?, featured = ?, active = ?, updated_at = datetime('now') WHERE id = ?`,
+         description = ?, highlights = ?, sale_mode = ?, featured = ?, active = ?, variant_group = ?, variant_label = ?, updated_at = datetime('now') WHERE id = ?`,
       )
       .run(...values, id);
     return id;
@@ -221,8 +228,8 @@ export function saveProduct(input: ProductInput, id?: string) {
   const newId = randomUUID();
   conn
     .prepare(
-      `INSERT INTO products (name, category_id, price, old_price, unit, stock, image_id, emoji, tint, description, highlights, sale_mode, featured, active, id, slug)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO products (name, category_id, price, old_price, unit, stock, image_id, emoji, tint, description, highlights, sale_mode, featured, active, variant_group, variant_label, id, slug)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .run(...values, newId, uniqueSlug("products", input.name));
   return newId;
@@ -243,4 +250,54 @@ function uniqueSlug(table: "products" | "categories", name: string) {
   let slug = base;
   for (let i = 2; exists.get(slug); i++) slug = `${base}-${i}`;
   return slug;
+}
+
+/* ===== Variações ===== */
+
+/** Opções do mesmo grupo visíveis na loja (para o seletor da página do produto), da mais barata para a mais cara. */
+export function listVariants(group: string) {
+  return (db().prepare(`${BASE} WHERE ${VISIBLE} AND p.variant_group = ? ORDER BY p.price, p.name`).all(group) as ProductRow[]).map(toProduct);
+}
+
+/** Grupos já usados (sugestões no formulário do painel). */
+export function listVariantGroups() {
+  return (db().prepare("SELECT DISTINCT variant_group AS g FROM products WHERE variant_group IS NOT NULL ORDER BY g").all() as { g: string }[]).map((r) => r.g);
+}
+
+/**
+ * Nas listas da loja, um card por grupo: fica a opção com estoque mais barata (ou a primeira da lista),
+ * com o total de opções e o menor preço do grupo. Produtos sem grupo passam como estão.
+ */
+export function collapseVariants(products: Product[]): Product[] {
+  const groups = [...new Set(products.map((p) => p.variantGroup).filter((g): g is string => !!g))];
+  if (groups.length === 0) return products;
+  const marks = groups.map(() => "?").join(",");
+  const all = (db().prepare(`${BASE} WHERE ${VISIBLE} AND p.variant_group IN (${marks})`).all(...groups) as ProductRow[]).map(toProduct);
+  const byGroup = new Map<string, Product[]>();
+  for (const p of all) byGroup.set(p.variantGroup!, [...(byGroup.get(p.variantGroup!) ?? []), p]);
+
+  const shown = new Set<string>();
+  const out: Product[] = [];
+  for (const p of products) {
+    const members = p.variantGroup ? byGroup.get(p.variantGroup) : undefined;
+    if (!members || members.length < 2) {
+      out.push(p);
+      continue;
+    }
+    if (shown.has(p.variantGroup!)) continue;
+    shown.add(p.variantGroup!);
+    // Representante: a opção da própria lista com estoque e menor preço (mantém o filtro da página, ex.: só ofertas)
+    const inList = products.filter((x) => x.variantGroup === p.variantGroup);
+    const available = inList.filter((x) => x.saleMode === "online" && x.stock > 0);
+    const rep = [...(available.length ? available : inList)].sort((a, b) => a.price - b.price)[0];
+    const prices = members.filter((m) => m.saleMode === "online" && m.price > 0).map((m) => m.price);
+    // Sem foto nesta opção? Usa a foto de outra opção do grupo (é o mesmo produto)
+    const imageId = rep.imageId ?? members.find((m) => m.imageId)?.imageId ?? null;
+    out.push({
+      ...rep,
+      imageId,
+      options: { count: members.length, minPrice: prices.length ? Math.min(...prices) : rep.price, maxPrice: prices.length ? Math.max(...prices) : rep.price },
+    });
+  }
+  return out;
 }

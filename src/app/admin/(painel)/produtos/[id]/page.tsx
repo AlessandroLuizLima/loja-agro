@@ -8,7 +8,7 @@ import { ConfirmSubmit } from "@/components/admin/client-buttons";
 import { ProductForm } from "@/components/admin/product-form";
 import { PageHeader } from "@/components/admin/ui";
 import { formatDateTime } from "@/lib/format";
-import { getProductById, listCategories } from "@/lib/server/catalog";
+import { getProductById, listCategories, listVariantGroups } from "@/lib/server/catalog";
 import { adminUrl } from "@/lib/admin-path";
 
 export const metadata: Metadata = { title: "Editar produto" };
@@ -34,7 +34,7 @@ export default async function EditProductPage({ params }: PageProps<"/admin/prod
           )
         }
       />
-      <ProductForm product={product} categories={listCategories({ activeOnly: false })} />
+      <ProductForm product={product} categories={listCategories({ activeOnly: false })} groups={listVariantGroups()} />
       <form action={deleteProductAction} className="mt-8 border-t border-line pt-5">
         <input type="hidden" name="id" value={product.id} />
         <ConfirmSubmit message={`Apagar "${product.name}"? Pedidos antigos continuam com o registro do item.`} className="text-sm font-semibold text-red-600 hover:underline">

@@ -11,7 +11,7 @@ const money = (n: number | null | undefined) => (n == null ? "" : n.toFixed(2).r
 
 const TINT_LABEL: Record<string, string> = { verde: "Verde", laranja: "Laranja", amarelo: "Amarelo", azul: "Azul", rosa: "Rosa", petroleo: "Cinza-azulado" };
 
-export function ProductForm({ product, categories }: { product?: Product; categories: Pick<Category, "id" | "name">[] }) {
+export function ProductForm({ product, categories, groups = [] }: { product?: Product; categories: Pick<Category, "id" | "name">[]; groups?: string[] }) {
   const [state, onSubmit, pending] = useFormAction<AdminState>(saveProductAction, {});
   const [saleMode, setSaleMode] = useState(product?.saleMode ?? "online");
   const e = state.fieldErrors ?? {};
@@ -37,6 +37,21 @@ export function ProductForm({ product, categories }: { product?: Product; catego
             <Field label="Unidade de venda" name="unit" required defaultValue={product?.unit ?? "Unidade"} error={e.unit} placeholder="Ex.: Saco 15 kg" />
             <TextArea className="sm:col-span-2" label="Descrição" name="description" rows={4} defaultValue={product?.description} error={e.description} />
             <TextArea className="sm:col-span-2" label="Destaques (um por linha)" name="highlights" rows={3} defaultValue={product?.highlights.join("\n")} hint="Aparecem com ✔ na página do produto." />
+          </div>
+        </Card>
+
+        <Card
+          title="Variações (opcional)"
+          description="Use quando o mesmo produto tem tamanhos diferentes, cada um com preço e estoque próprios. Ex.: grupo “racao-premium-caes”, opções “3 kg” e “15 kg”. Na loja vira uma vitrine só, com botões para escolher."
+        >
+          <div className="mt-3 grid gap-4 sm:grid-cols-2">
+            <Field label="Grupo" name="variantGroup" list="grupos-variacao" defaultValue={product?.variantGroup ?? ""} error={e.variantGroup} placeholder="Ex.: racao-premium-caes" hint="Escreva o mesmo grupo nas outras opções." />
+            <datalist id="grupos-variacao">
+              {groups.map((g) => (
+                <option key={g} value={g} />
+              ))}
+            </datalist>
+            <Field label="Nome desta opção" name="variantLabel" defaultValue={product?.variantLabel ?? ""} error={e.variantLabel} placeholder="Ex.: 15 kg" maxLength={30} />
           </div>
         </Card>
 

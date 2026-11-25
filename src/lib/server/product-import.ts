@@ -1,6 +1,6 @@
 import "server-only";
 import { csvMoney, parseCsv, toCsv } from "../csv";
-import { normalizeText } from "../format";
+import { normalizeText, slugify } from "../format";
 import { parseMoney } from "../masks";
 import type { Product, SaleMode } from "../types";
 import { listAllProducts, listCategories, saveCategory, saveProduct } from "./catalog";
@@ -12,7 +12,7 @@ import { db, transaction } from "./db";
  * Fotos não entram na planilha: continuam sendo enviadas pelo painel.
  */
 
-export const COLUMNS = ["id", "nome", "categoria", "preco", "preco_de", "unidade", "estoque", "venda", "destaque", "ativo", "descricao"] as const;
+export const COLUMNS = ["id", "nome", "categoria", "preco", "preco_de", "unidade", "estoque", "venda", "destaque", "ativo", "grupo", "opcao", "descricao"] as const;
 type Column = (typeof COLUMNS)[number];
 
 export const MAX_ROWS = 5000;
@@ -31,6 +31,8 @@ export function exportProductsCsv() {
     p.saleMode,
     yes(p.featured),
     yes(p.active),
+    p.variantGroup ?? "",
+    p.variantLabel ?? "",
     p.description,
   ]);
   return toCsv([[...COLUMNS], ...rows]);
@@ -39,8 +41,9 @@ export function exportProductsCsv() {
 export function templateCsv() {
   return toCsv([
     [...COLUMNS],
-    ["", "Ração para cães filhotes 10 kg", "Cães e gatos", "129,90", "", "Saco 10 kg", 12, "online", "não", "sim", "Ração completa para filhotes."],
-    ["", "Sal mineral 30 kg", "Bovinos", "159,90", "179,90", "Saco 30 kg", 8, "online", "sim", "sim", ""],
+    ["", "Ração para cães filhotes 3 kg", "Cães e gatos", "49,90", "", "Pacote 3 kg", 20, "online", "não", "sim", "racao-filhotes", "3 kg", "Ração completa para filhotes."],
+    ["", "Ração para cães filhotes 10 kg", "Cães e gatos", "129,90", "", "Saco 10 kg", 12, "online", "não", "sim", "racao-filhotes", "10 kg", "Ração completa para filhotes."],
+    ["", "Sal mineral 30 kg", "Bovinos", "159,90", "179,90", "Saco 30 kg", 8, "online", "sim", "sim", "", "", ""],
   ]);
 }
 
@@ -49,7 +52,9 @@ export type ImportLine = {
   action: "criar" | "atualizar";
   name: string;
   id?: string;
-  data: Partial<Pick<Product, "name" | "price" | "oldPrice" | "unit" | "stock" | "saleMode" | "featured" | "active" | "description">> & { category?: string };
+  data: Partial<Pick<Product, "name" | "price" | "oldPrice" | "unit" | "stock" | "saleMode" | "featured" | "active" | "description" | "variantGroup" | "variantLabel">> & {
+    category?: string;
+  };
 };
 
 export type ImportPlan = { lines: ImportLine[]; errors: { line: number; message: string }[]; newCategories: string[] };
@@ -133,6 +138,12 @@ export function planImport(text: string): ImportPlan {
     if (featured === null) problems.push('destaque deve ser "sim" ou "não"');
     if (active === null) problems.push('ativo deve ser "sim" ou "não"');
 
+    const groupText = get("grupo");
+    const variantGroup = groupText === undefined ? undefined : slugify(groupText) || null;
+    const variantLabel = get("opcao");
+    if (variantGroup && !variantLabel) problems.push('preencha "opcao" (ex.: 15 kg) para usar "grupo"');
+    if (variantLabel && variantLabel.length > 30) problems.push("opção muito longa");
+
     const unit = get("unidade");
     const description = get("descricao");
     if (description && description.length > 2000) problems.push("descrição muito longa");
@@ -157,6 +168,7 @@ export function planImport(text: string): ImportPlan {
         ...(featured !== undefined && featured !== null && { featured }),
         ...(active !== undefined && active !== null && { active }),
         ...(description !== undefined && { description }),
+        ...(variantGroup !== undefined && { variantGroup, variantLabel: variantGroup ? variantLabel : null }),
       },
     });
   });
@@ -194,6 +206,8 @@ export function applyImport(plan: ImportPlan) {
           saleMode: d.saleMode ?? before?.saleMode ?? "online",
           featured: d.featured ?? before?.featured ?? false,
           active: d.active ?? before?.active ?? true,
+          variantGroup: d.variantGroup !== undefined ? d.variantGroup : (before?.variantGroup ?? null),
+          variantLabel: d.variantGroup !== undefined ? (d.variantLabel ?? null) : (before?.variantLabel ?? null),
         },
         before?.id,
       );
