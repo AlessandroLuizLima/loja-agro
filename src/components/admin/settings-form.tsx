@@ -51,7 +51,7 @@ export function SettingsForm({ settings: s }: { settings: Settings }) {
       <Card title="Contato e endereço">
         <div className="grid gap-4 sm:grid-cols-6">
           <Field className="sm:col-span-3" label="WhatsApp da loja" name="whatsapp" type="tel" inputMode="numeric" required defaultValue={formatPhone(s.whatsapp)} error={e.whatsapp} hint="Recebe os avisos de pedido dos clientes." />
-          <Field className="sm:col-span-3" label="E-mail" name="email" type="email" defaultValue={s.email} error={e.email} />
+          <Field className="sm:col-span-3" label="E-mail" name="email" type="email" defaultValue={s.email} error={e.email} hint="Recebe o aviso de cada pedido novo (com o serviço de e-mail configurado)." />
           <Field className="sm:col-span-6" label="Endereço da loja" name="address" required defaultValue={s.address} error={e.address} placeholder="Rua, número – bairro" />
           <Field className="sm:col-span-4" label="Cidade" name="city" required defaultValue={s.city} error={e.city} />
           <Field className="sm:col-span-2" label="UF" name="state" required maxLength={2} defaultValue={s.state} error={e.state} />

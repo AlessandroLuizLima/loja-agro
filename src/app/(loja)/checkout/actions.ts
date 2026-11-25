@@ -1,5 +1,6 @@
 "use server";
 
+import { after } from "next/server";
 import { z } from "zod";
 import { todayISO } from "@/lib/dates";
 import { onlyDigits } from "@/lib/format";
@@ -8,6 +9,7 @@ import { getProductsBySlugs } from "@/lib/server/catalog";
 import { checkoutDates } from "@/lib/server/checkout";
 import { findActiveCoupon } from "@/lib/server/coupons";
 import { getZone } from "@/lib/server/delivery";
+import { notifyNewOrder } from "@/lib/server/notify";
 import { createOrder, OutOfStockError } from "@/lib/server/orders";
 import { getSettings } from "@/lib/server/settings";
 import { getCurrentUser } from "@/lib/server/users";
@@ -144,6 +146,8 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
   const user = await getCurrentUser();
   try {
     const { id } = createOrder({ userId: user?.id ?? null, payload });
+    // Aviso por e-mail para a loja depois de responder ao cliente (não atrasa a confirmação)
+    after(() => notifyNewOrder(id));
     return { status: "success", orderId: id };
   } catch (err) {
     if (err instanceof OutOfStockError) return { status: "error", message: `Acabou de esgotar: ${err.productName}. Ajuste o carrinho e tente de novo.` };

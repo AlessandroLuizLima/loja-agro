@@ -37,19 +37,34 @@ export async function sendCode(channel: Channel, to: string, code: string, store
   }
 }
 
-async function sendEmail(to: string, code: string, storeName: string) {
+function sendEmail(to: string, code: string, storeName: string) {
+  return resend(
+    to,
+    `${code} é o seu código de confirmação – ${storeName}`,
+    `Olá!\n\nSeu código para confirmar este e-mail na ${storeName} é: ${code}\n\nEle vale por 10 minutos. Se não foi você, ignore esta mensagem.`,
+  );
+}
+
+async function resend(to: string, subject: string, text: string) {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from: process.env.EMAIL_FROM,
-      to,
-      subject: `${code} é o seu código de confirmação – ${storeName}`,
-      text: `Olá!\n\nSeu código para confirmar este e-mail na ${storeName} é: ${code}\n\nEle vale por 10 minutos. Se não foi você, ignore esta mensagem.`,
-    }),
+    body: JSON.stringify({ from: process.env.EMAIL_FROM, to, subject, text }),
     signal: AbortSignal.timeout(10_000),
   });
   if (!res.ok) throw new Error(`Resend respondeu ${res.status}`);
+}
+
+/** E-mail para a própria loja (aviso de pedido novo). Sem Resend configurado, não faz nada. */
+export async function emailStore(to: string, subject: string, text: string) {
+  if (!emailConfigured() || !to) return false;
+  try {
+    await resend(to, subject, text);
+    return true;
+  } catch (err) {
+    console.error("[loja] Falha ao enviar aviso de pedido:", err);
+    return false;
+  }
 }
 
 async function sendSms(to: string, code: string, storeName: string) {
