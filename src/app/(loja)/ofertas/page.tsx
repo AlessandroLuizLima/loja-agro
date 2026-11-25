@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { SortableProducts } from "@/components/sortable-products";
-import { listProducts } from "@/lib/server/catalog";
+import { collapseVariants, listProducts } from "@/lib/server/catalog";
 import { getSettings, storeInfo } from "@/lib/server/settings";
 
 export const metadata: Metadata = { title: "Ofertas", alternates: { canonical: "/ofertas" } };
@@ -21,7 +21,7 @@ export default async function OffersPage() {
           <p className="text-sm text-muted lg:text-base">Preços especiais enquanto durar o estoque.</p>
         </div>
       </header>
-      <SortableProducts products={listProducts({ onSale: true })} store={storeInfo(getSettings())} />
+      <SortableProducts products={collapseVariants(listProducts({ onSale: true }))} store={storeInfo(getSettings())} />
     </div>
   );
 }

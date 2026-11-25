@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { SortableProducts } from "@/components/sortable-products";
-import { getCategoryBySlug, listProducts } from "@/lib/server/catalog";
+import { collapseVariants, getCategoryBySlug, listProducts } from "@/lib/server/catalog";
 import { getSettings, storeInfo } from "@/lib/server/settings";
 import { tintClass } from "@/lib/types";
 
@@ -30,7 +30,7 @@ export default async function CategoryPage({ params }: PageProps<"/categoria/[sl
           <p className="text-sm text-muted lg:text-base">{category.description}</p>
         </div>
       </header>
-      <SortableProducts products={listProducts({ categoryId: category.id })} store={storeInfo(getSettings())} />
+      <SortableProducts products={collapseVariants(listProducts({ categoryId: category.id }))} store={storeInfo(getSettings())} />
     </div>
   );
 }

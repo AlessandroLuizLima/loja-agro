@@ -1,5 +1,6 @@
 import { Check, MessageCircle, Store, Truck } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Breadcrumbs } from "@/components/breadcrumbs";
@@ -9,7 +10,7 @@ import { ProductImage } from "@/components/product-image";
 import { ProductPurchase } from "@/components/product-purchase";
 import { SectionHeading } from "@/components/section-heading";
 import { brl, discountPercent } from "@/lib/format";
-import { getProductBySlug, relatedProducts } from "@/lib/server/catalog";
+import { getProductBySlug, listVariants, relatedProducts } from "@/lib/server/catalog";
 import { getSettings, siteUrl, storeInfo } from "@/lib/server/settings";
 import { imageUrl, toSnapshot } from "@/lib/types";
 import { waLink } from "@/lib/whatsapp";
@@ -39,6 +40,7 @@ export default async function ProductPage({ params }: PageProps<"/produto/[slug]
   const available = !consulta && product.stock > 0;
   const stock = stockText(product);
   const image = imageUrl(product.imageId);
+  const variants = product.variantGroup ? listVariants(product.variantGroup) : [];
 
   // Dados estruturados para o Google mostrar preço e disponibilidade no resultado da busca
   const jsonLd = {
@@ -67,12 +69,40 @@ export default async function ProductPage({ params }: PageProps<"/produto/[slug]
       <div className="grid gap-6 lg:grid-cols-2 lg:gap-12">
         <div className="relative">
           {off > 0 && <span className="badge top-4 left-4 bg-red-500 px-3 py-1.5 text-sm text-white">-{off}%</span>}
-          <ProductImage item={product} eager className="aspect-square rounded-3xl" emojiClassName="text-[9rem] lg:text-[13rem]" />
+          <ProductImage item={{ ...product, imageId: product.imageId ?? variants.find((v) => v.imageId)?.imageId ?? null }} eager className="aspect-square rounded-3xl" emojiClassName="text-[9rem] lg:text-[13rem]" />
         </div>
 
         <div>
           <h1 className="mb-1 text-2xl leading-tight font-bold text-petrol lg:text-3xl">{product.name}</h1>
           <p className="text-muted">{product.unit}</p>
+
+          {variants.length > 1 && (
+            <nav aria-label="Opções do produto" className="mt-4">
+              <p className="mb-2 text-sm font-semibold text-petrol">Escolha a opção:</p>
+              <ul className="flex flex-wrap gap-2">
+                {variants.map((v) => {
+                  const current = v.id === product.id;
+                  const out = v.saleMode === "online" && v.stock <= 0;
+                  return (
+                    <li key={v.id}>
+                      <Link
+                        href={`/produto/${v.slug}`}
+                        replace
+                        scroll={false}
+                        aria-current={current ? "page" : undefined}
+                        className={`flex min-w-24 flex-col items-center rounded-xl border-2 px-4 py-2 text-center transition ${
+                          current ? "border-brand bg-brand-soft/60 text-petrol" : "border-line bg-white text-ink hover:border-brand/60"
+                        } ${out ? "opacity-60" : ""}`}
+                      >
+                        <span className="font-display font-semibold">{v.variantLabel ?? v.unit}</span>
+                        <span className="text-xs text-muted">{v.saleMode === "consulta" ? "Consulte" : out ? "Sem estoque" : brl(v.price)}</span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
+          )}
 
           <div className="my-5 rounded-2xl bg-white p-5 shadow-card">
             {consulta ? (
@@ -111,7 +141,7 @@ export default async function ProductPage({ params }: PageProps<"/produto/[slug]
               </li>
             )}
             <li className="flex items-center gap-2">
-              <Truck className="size-4 text-brand" /> Entrega na sua região em dia fixo
+              <Truck className="size-4 text-brand" /> Entrega na sua casa, no dia do seu bairro
             </li>
           </ul>
 

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { SortableProducts } from "@/components/sortable-products";
-import { listCategories, searchProducts } from "@/lib/server/catalog";
+import { collapseVariants, listCategories, searchProducts } from "@/lib/server/catalog";
 import { getSettings, storeInfo } from "@/lib/server/settings";
 
 export const metadata: Metadata = { title: "Busca", robots: { index: false } };
@@ -12,7 +12,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/busca">) 
   await connection();
   const raw = (await searchParams).q;
   const q = (Array.isArray(raw) ? raw[0] : (raw ?? "")).trim().slice(0, 80);
-  const results = searchProducts(q);
+  const results = collapseVariants(searchProducts(q));
 
   return (
     <div className="container-page py-5 lg:py-8">

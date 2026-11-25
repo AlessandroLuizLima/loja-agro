@@ -23,6 +23,9 @@ export function ProductCard({ product, store }: { product: Product; store: Store
   const consulta = product.saleMode === "consulta";
   const available = !consulta && product.stock > 0;
   const stock = stockText(product);
+  // Grupo de variações: o card mostra "a partir de" e leva à página para escolher a opção
+  const options = product.options && product.options.count > 1 ? product.options : null;
+  const fromPrice = options && options.minPrice < options.maxPrice ? options.minPrice : null;
 
   return (
     <article className="reveal group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-card ring-1 ring-line/70 transition duration-300 hover:-translate-y-1.5 hover:shadow-lift hover:ring-brand/40">
@@ -39,13 +42,14 @@ export function ProductCard({ product, store }: { product: Product; store: Store
             {product.name}
           </Link>
         </h3>
-        <p className="text-xs text-muted">{product.unit}</p>
+        <p className="text-xs text-muted">{options ? `${options.count} opções` : product.unit}</p>
 
         {!consulta && (
           <div>
-            {off > 0 && <p className="text-xs text-muted line-through">{brl(product.oldPrice!)}</p>}
-            <p className="font-display text-xl font-bold text-petrol">{brl(product.price)}</p>
-            {store.pixPercent > 0 && <p className="text-xs font-semibold text-emerald-700">{brl(product.price * (1 - store.pixPercent / 100))} no Pix</p>}
+            {off > 0 && !fromPrice && <p className="text-xs text-muted line-through">{brl(product.oldPrice!)}</p>}
+            {fromPrice && <p className="text-xs text-muted">a partir de</p>}
+            <p className="font-display text-xl font-bold text-petrol">{brl(fromPrice ?? product.price)}</p>
+            {store.pixPercent > 0 && <p className="text-xs font-semibold text-emerald-700">{brl((fromPrice ?? product.price) * (1 - store.pixPercent / 100))} no Pix</p>}
           </div>
         )}
         <p className={`flex items-center gap-1.5 text-xs font-semibold ${stock.tone}`}>
@@ -53,7 +57,11 @@ export function ProductCard({ product, store }: { product: Product; store: Store
           {stock.text}
         </p>
 
-        {available ? (
+        {options && !consulta ? (
+          <Link href={href} className="btn btn-primary mt-auto h-11 w-full px-3 text-sm">
+            Escolher opção
+          </Link>
+        ) : available ? (
           <AddToCartButton product={toSnapshot(product)} />
         ) : (
           <a

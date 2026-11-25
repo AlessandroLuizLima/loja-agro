@@ -9,7 +9,7 @@ import { ProductImage } from "@/components/product-image";
 import { SectionHeading } from "@/components/section-heading";
 import { daysSummary } from "@/lib/dates";
 import { brl } from "@/lib/format";
-import { listCategories, listProducts } from "@/lib/server/catalog";
+import { collapseVariants, listCategories, listProducts } from "@/lib/server/catalog";
 import { listZones } from "@/lib/server/delivery";
 import { getSettings, storeInfo } from "@/lib/server/settings";
 import { tintClass } from "@/lib/types";
@@ -29,8 +29,8 @@ export default async function Home() {
   const s = getSettings();
   const store = storeInfo(s);
   const categories = listCategories().filter((c) => c.productCount > 0);
-  const offers = listProducts({ onSale: true, limit: 8 });
-  const featured = listProducts({ featured: true, limit: 8 });
+  const offers = collapseVariants(listProducts({ onSale: true, limit: 8 }));
+  const featured = collapseVariants(listProducts({ featured: true, limit: 8 }));
   const zones = listZones();
 
   const spotlight = featured[0] ?? offers[0];
