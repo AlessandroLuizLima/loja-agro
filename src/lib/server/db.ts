@@ -166,6 +166,12 @@ const MIGRATIONS = [
     PRIMARY KEY (user_id, channel)
   );
   `,
+  // 5: variações (o mesmo produto em tamanhos diferentes, cada um com preço e estoque próprios)
+  `
+  ALTER TABLE products ADD COLUMN variant_group TEXT;
+  ALTER TABLE products ADD COLUMN variant_label TEXT;
+  CREATE INDEX products_variant_group_idx ON products(variant_group);
+  `,
 ];
 
 const globalForDb = globalThis as unknown as { lojaDb?: DatabaseSync };
@@ -187,10 +193,11 @@ function migrate(conn: DatabaseSync) {
   for (let i = version; i < MIGRATIONS.length; i++) {
     transaction(conn, () => {
       conn.exec(MIGRATIONS[i]);
-      if (i === 0 && process.env.SEED_DEMO !== "false") seedDemoData(conn);
       conn.exec(`PRAGMA user_version = ${i + 1}`);
     });
   }
+  // Banco novo: dados de demonstração depois de todas as migrações (usam as colunas mais recentes)
+  if (version === 0 && process.env.SEED_DEMO !== "false") transaction(conn, () => seedDemoData(conn));
 }
 
 /**

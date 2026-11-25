@@ -34,10 +34,16 @@ type SeedProduct = {
   highlights: string[];
   consulta?: boolean;
   featured?: boolean;
+  /** Variação: grupo e nome da opção */
+  group?: string;
+  option?: string;
+  /** Foto de public/demo-fotos (padrão: o slug do produto) */
+  photo?: string;
 };
 
 const products: SeedProduct[] = [
-  { name: "Ração para cães adultos Premium 15 kg", cat: 0, price: 159.9, old: 189.9, unit: "Saco 15 kg", stock: 24, emoji: "🐕", tint: "laranja", featured: true, description: "Ração completa para cães adultos de todos os portes, com proteína de frango e arroz.", highlights: ["Rica em ômega 3 e 6", "Sem corantes artificiais", "Rende cerca de 50 dias para um cão médio"] },
+  { name: "Ração para cães adultos Premium 15 kg", cat: 0, price: 159.9, old: 189.9, unit: "Saco 15 kg", stock: 24, emoji: "🐕", tint: "laranja", featured: true, group: "racao-caes-premium", option: "15 kg", photo: "racao-para-caes-adultos-premium-15-kg", description: "Ração completa para cães adultos de todos os portes, com proteína de frango e arroz.", highlights: ["Rica em ômega 3 e 6", "Sem corantes artificiais", "Rende cerca de 50 dias para um cão médio"] },
+  { name: "Ração para cães adultos Premium 3 kg", cat: 0, price: 44.9, unit: "Pacote 3 kg", stock: 18, emoji: "🐕", tint: "laranja", group: "racao-caes-premium", option: "3 kg", photo: "racao-para-caes-adultos-premium-15-kg", description: "Ração completa para cães adultos de todos os portes, com proteína de frango e arroz.", highlights: ["Rica em ômega 3 e 6", "Sem corantes artificiais", "Embalagem prática para cães pequenos"] },
   { name: "Ração para gatos adultos 10,1 kg", cat: 0, price: 139.9, unit: "Saco 10,1 kg", stock: 15, emoji: "🐈", tint: "rosa", description: "Fórmula para gatos adultos, com controle de bolas de pelo e saúde urinária.", highlights: ["Controle de pH urinário", "Fibras para bolas de pelo", "Croquetes crocantes"] },
   { name: "Areia higiênica para gatos 4 kg", cat: 0, price: 19.9, unit: "Pacote 4 kg", stock: 40, emoji: "🪣", tint: "amarelo", description: "Areia de grãos finos com alta absorção e controle de odor.", highlights: ["Forma torrões firmes", "Controle de odor por até 7 dias"] },
   { name: "Ração para galinhas poedeiras 25 kg", cat: 1, price: 98.9, old: 109.9, unit: "Saco 25 kg", stock: 30, emoji: "🐔", tint: "amarelo", featured: true, description: "Ração farelada balanceada para aumentar a postura e a qualidade da casca.", highlights: ["Cálcio na medida certa", "Aumenta a postura", "Para aves a partir de 18 semanas"] },
@@ -73,8 +79,8 @@ export function seedDemoData(conn: DatabaseSync) {
   });
 
   const insertProduct = conn.prepare(
-    `INSERT INTO products (id, slug, name, category_id, price, old_price, unit, stock, emoji, tint, description, highlights, sale_mode, featured, image_id)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO products (id, slug, name, category_id, price, old_price, unit, stock, emoji, tint, description, highlights, sale_mode, featured, image_id, variant_group, variant_label)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   );
   for (const p of products) {
     const slug = slugify(p.name);
@@ -93,7 +99,9 @@ export function seedDemoData(conn: DatabaseSync) {
       JSON.stringify(p.highlights),
       p.consulta ? "consulta" : "online",
       p.featured ? 1 : 0,
-      demoPhoto(conn, slug),
+      demoPhoto(conn, p.photo ?? slug),
+      p.group ?? null,
+      p.option ?? null,
     );
   }
 
