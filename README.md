@@ -21,6 +21,7 @@ Feita com **Next.js 16**, **React 19**, **TypeScript**, **Tailwind CSS v4** e **
 | **Entrega por região** | Cada região tem taxa, valor para frete grátis e dias de rota (ex.: zona norte só às terças) |
 | **Pagamento** | Pix pelo site com QR Code (desconto opcional) ou pagar na retirada/entrega (dinheiro com troco, cartão ou Pix) |
 | **Confirmação** | Página do pedido com QR Pix e botão que manda o resumo pronto para o WhatsApp da loja |
+| **Pedir de novo** | No histórico, um toque põe no carrinho os itens de um pedido antigo, com preço e estoque de hoje |
 | **Conta** (opcional) | Cadastro, login, histórico de pedidos, confirmação de e-mail e celular por código, troca de senha e exclusão da conta. Também dá para comprar sem cadastro |
 
 ### Para o lojista (painel)
@@ -28,8 +29,9 @@ Feita com **Next.js 16**, **React 19**, **TypeScript**, **Tailwind CSS v4** e **
 | | |
 | --- | --- |
 | **Início** | Pedidos novos, pedidos do dia (e atrasados), vendas de 24 h/7/30 dias, estoque baixo |
+| **Alerta de pedido novo** | Com o painel aberto (no balcão ou no celular), pedido novo aparece sozinho com som, aviso na tela e notificação do sistema. Com o serviço de e-mail configurado, a loja também recebe um e-mail a cada pedido |
 | **Pedidos** | Filtro por etapa, botão de próximo passo (Confirmar → Separado → Saiu para entrega → Entregue), marcar como pago, cancelar (devolve ao estoque), imprimir para separação e **mensagem pronta no WhatsApp do cliente** |
-| **Produtos** | Cadastro com foto (reduzida no próprio celular antes de enviar), preço "de/por", unidade (saco 25 kg…), estoque, destaque, ocultar. Ajuste rápido de estoque na lista |
+| **Produtos** | Cadastro com foto (reduzida no próprio celular antes de enviar), preço "de/por", unidade (saco 25 kg…), estoque, destaque, ocultar. Ajuste rápido de estoque na lista. **Planilha:** baixa todos os produtos, edita no Excel e importa de volta (preço e estoque de tudo de uma vez), ou cadastra centenas de produtos novos, com conferência linha a linha antes de gravar |
 | **Categorias** | Nome, ícone, cor, ordem, visível ou não |
 | **Entregas** | Dias de retirada e regiões de entrega (taxa, grátis acima de, dias da rota) |
 | **Cupons** | Código, % de desconto, compra mínima, pausar/reativar, quantas vezes foi usado |
@@ -137,7 +139,8 @@ docker compose cp loja-a:/data/backup.db ./backup-loja-a-$(date +%F).db
 4. **Produtos controlados:** medicamentos com receita e defensivos agrícolas devem ficar como "Sob consulta".
 5. **Confirmação de e-mail e celular:** para os clientes receberem o código de verdade, crie uma conta no [Resend](https://resend.com) (e-mail, grátis até 3.000/mês) e, se quiser SMS, no [Twilio](https://www.twilio.com), e preencha as variáveis `RESEND_*`/`EMAIL_FROM` e `TWILIO_*`. Sem elas, a opção de confirmar não aparece em produção.
 6. **Fotos:** as fotos de demonstração são de licença livre (créditos em `public/demo-fotos/CREDITOS.md`); numa loja de cliente, use fotos dos produtos reais dela.
-7. **Avisos de pedido:** hoje o cliente avisa a loja pelo WhatsApp com um toque e o lojista vê o pedido no painel. Para aviso automático (e-mail ou WhatsApp API), integre um serviço como Resend ou a API oficial do WhatsApp.
+7. **Avisos de pedido:** deixe o painel aberto com o alerta ligado no computador do balcão (ou no celular) e configure o Resend para o e-mail de cada pedido. Para mensagem automática no WhatsApp da loja, integre a API oficial do WhatsApp.
+8. **Cadastro inicial:** peça ao lojista a planilha de produtos do sistema que ele já usa e importe em Painel > Produtos > Planilha.
 
 ## Scripts
 
