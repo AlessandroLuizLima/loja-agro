@@ -117,3 +117,10 @@ export function salesSummary() {
       .get(`-${sinceDays} days`) as { orders: number; revenue: number };
   return { today: sum(1), week: sum(7), month: sum(30) };
 }
+
+/** Último pedido feito (para o alerta de pedido novo no painel). */
+export function latestOrder() {
+  return db().prepare("SELECT id, number, customer_name AS name, total FROM orders ORDER BY number DESC LIMIT 1").get() as
+    | { id: string; number: number; name: string; total: number }
+    | undefined;
+}
