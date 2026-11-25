@@ -16,6 +16,7 @@ import { getSettings } from "@/lib/server/settings";
 import { getCurrentUser } from "@/lib/server/users";
 import { ON_DELIVERY_LABEL } from "@/lib/types";
 import { orderMessageForStore, waLink } from "@/lib/whatsapp";
+import { ReorderButton } from "@/components/reorder-button";
 
 export const metadata: Metadata = { title: "Pedido", robots: { index: false } };
 
@@ -160,6 +161,7 @@ export default async function OrderPage({ params }: PageProps<"/pedido/[id]">) {
           </dl>
         </section>
 
+        {(order.status === "concluido" || order.status === "cancelado") && <ReorderButton orderId={order.id} className="mx-auto w-full max-w-xs" />}
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Link href="/" className="btn btn-primary">
             Continuar comprando

@@ -7,6 +7,7 @@ import { ContactRow } from "@/components/account/contact-row";
 import { DeleteAccount } from "@/components/auth/delete-account";
 import { OrderStatusBadge } from "@/components/order-status-badge";
 import { ProductImage } from "@/components/product-image";
+import { ReorderButton } from "@/components/reorder-button";
 import { longDate } from "@/lib/dates";
 import { brl, formatDate } from "@/lib/format";
 import { canVerify } from "@/lib/server/messaging";
@@ -72,8 +73,8 @@ export default async function AccountPage() {
           ) : (
             <ul className="divide-y divide-line">
               {orders.map((o) => (
-                <li key={o.id}>
-                  <Link href={`/pedido/${o.id}`} className="-mx-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl px-3 py-4 transition hover:bg-cream">
+                <li key={o.id} className="py-1">
+                  <Link href={`/pedido/${o.id}`} className="-mx-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl px-3 py-3 transition hover:bg-cream">
                     <div className="flex -space-x-3" aria-hidden="true">
                       {o.items.slice(0, 3).map((i) => (
                         <ProductImage key={i.slug} item={i} className="size-11 rounded-full border-2 border-white" emojiClassName="text-xl" />
@@ -88,6 +89,7 @@ export default async function AccountPage() {
                     <OrderStatusBadge status={o.status} type={o.fulfillment.type} />
                     <p className="w-24 text-right font-display font-bold text-petrol">{brl(o.totals.total)}</p>
                   </Link>
+                  <ReorderButton orderId={o.id} className="mb-2 sm:ml-auto sm:w-48" />
                 </li>
               ))}
             </ul>
