@@ -1,4 +1,4 @@
-import { CheckCircle2, Plus, Search } from "lucide-react";
+import { CheckCircle2, FileSpreadsheet, Plus, Search } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
@@ -26,9 +26,14 @@ export default async function ProductsPage({ searchParams }: PageProps<"/admin/p
         title="Produtos"
         subtitle={`${products.length} ${products.length === 1 ? "produto" : "produtos"}`}
         action={
-          <Link href={adminUrl("/produtos/novo")} className="btn btn-primary h-11 px-5 text-sm">
-            <Plus className="size-4" /> Novo produto
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link href={adminUrl("/produtos/importar")} className="btn h-11 border-2 border-line bg-white px-4 text-sm text-petrol hover:border-brand">
+              <FileSpreadsheet className="size-4" /> Planilha
+            </Link>
+            <Link href={adminUrl("/produtos/novo")} className="btn btn-primary h-11 px-5 text-sm">
+              <Plus className="size-4" /> Novo produto
+            </Link>
+          </div>
         }
       />
 

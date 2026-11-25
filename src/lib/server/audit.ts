@@ -23,6 +23,8 @@ export const AUDIT_LABELS: Record<string, string> = {
   produto_salvo: "Salvou produto",
   produto_apagado: "Apagou produto",
   estoque: "Ajustou estoque",
+  produtos_importados: "Importou planilha de produtos",
+  produtos_exportados: "Baixou a planilha de produtos",
   pedido_etapa: "Mudou a etapa do pedido",
   pedido_pagamento: "Mudou o pagamento do pedido",
   pedido_anonimizado: "Removeu os dados pessoais do pedido",
