@@ -5,7 +5,7 @@ import { db, transaction } from "./db";
 import { pruneAttempts } from "./rate-limit";
 
 /**
- * LGPD: exclusão, anonimização e exportação de dados pessoais.
+ * LGPD: exclusão e anonimização de dados pessoais.
  *
  * Pedidos não são apagados (são registro de venda e de estoque): perdem nome, telefone,
  * e-mail, endereço e observações, e ficam só com produtos, valores e datas.
@@ -42,35 +42,6 @@ export function deleteCustomer(userId: string) {
     conn.prepare("DELETE FROM users WHERE id = ? AND role = 'cliente'").run(userId);
     return n;
   });
-}
-
-/** Tudo o que a loja guarda sobre o cliente, para ele baixar (direito de acesso e portabilidade). */
-export function exportCustomerData(userId: string) {
-  const conn = db();
-  const user = conn
-    .prepare("SELECT name, email, phone, created_at AS createdAt, privacy_accepted_at AS privacyAcceptedAt FROM users WHERE id = ?")
-    .get(userId);
-  const orders = (conn.prepare("SELECT number, status, payment_status, created_at, payload FROM orders WHERE user_id = ? ORDER BY number").all(userId) as {
-    number: number;
-    status: string;
-    payment_status: string;
-    created_at: string;
-    payload: string;
-  }[]).map((o) => {
-    const p = JSON.parse(o.payload) as OrderPayload;
-    return {
-      numero: o.number,
-      feitoEm: o.created_at,
-      andamento: o.status,
-      pagamento: o.payment_status,
-      cliente: p.customer,
-      recebimento: p.fulfillment,
-      itens: p.items.map((i) => ({ produto: i.name, quantidade: i.qty, precoUnitario: i.unitPrice, total: i.lineTotal })),
-      totais: p.totals,
-      observacoes: p.notes,
-    };
-  });
-  return { geradoEm: new Date().toISOString(), conta: user, pedidos: orders };
 }
 
 /**

@@ -151,8 +151,8 @@ export function infoPages(s: Settings, zones: DeliveryZone[]): InfoPage[] {
           heading: "Seus direitos",
           body: [
             "Você pode, a qualquer momento: confirmar se tratamos seus dados, ter acesso a eles, corrigi-los, pedir a exclusão, receber uma cópia (portabilidade) e saber com quem foram compartilhados (art. 18 da LGPD).",
-            "Se tem conta: em Minha conta você baixa seus dados e exclui a conta sozinho, na hora.",
-            `Se comprou sem cadastro, ou para qualquer outro pedido: fale com o encarregado em ${privacyContact}. Respondemos em até 15 dias.`,
+            "Se tem conta: em Minha conta você vê e corrige seu e-mail e celular, troca a senha e exclui a conta sozinho, na hora.",
+            `Para receber uma cópia dos seus dados, se comprou sem cadastro, ou para qualquer outro pedido: fale com o encarregado em ${privacyContact}. Respondemos em até 15 dias.`,
             "Se não ficar satisfeito, você pode reclamar na Autoridade Nacional de Proteção de Dados (ANPD), em gov.br/anpd.",
           ],
         },
