@@ -151,6 +151,21 @@ const MIGRATIONS = [
   );
   CREATE INDEX recovery_codes_user_idx ON recovery_codes(user_id);
   `,
+  // 4: confirmação de e-mail e celular do cliente por código
+  `
+  ALTER TABLE users ADD COLUMN email_verified_at TEXT;
+  ALTER TABLE users ADD COLUMN phone_verified_at TEXT;
+
+  CREATE TABLE verification_codes (
+    user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    channel    TEXT NOT NULL CHECK (channel IN ('email', 'phone')),
+    target     TEXT NOT NULL,
+    code_hash  TEXT NOT NULL,
+    expires_at INTEGER NOT NULL,
+    attempts   INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (user_id, channel)
+  );
+  `,
 ];
 
 const globalForDb = globalThis as unknown as { lojaDb?: DatabaseSync };

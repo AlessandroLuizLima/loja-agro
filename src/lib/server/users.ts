@@ -18,6 +18,8 @@ export type PublicUser = {
   createdAt: string;
   sessionVersion: number;
   mustChangePassword: boolean;
+  emailVerified: boolean;
+  phoneVerified: boolean;
 };
 
 export type UserRow = {
@@ -31,6 +33,8 @@ export type UserRow = {
   session_version: number;
   must_change_password: number;
   privacy_accepted_at: string | null;
+  email_verified_at: string | null;
+  phone_verified_at: string | null;
 };
 
 const toPublic = (r: UserRow): PublicUser => ({
@@ -43,6 +47,8 @@ const toPublic = (r: UserRow): PublicUser => ({
   createdAt: r.created_at,
   sessionVersion: r.session_version,
   mustChangePassword: r.must_change_password === 1,
+  emailVerified: !!r.email_verified_at,
+  phoneVerified: !!r.phone_verified_at,
 });
 
 export const sessionUser = (r: UserRow) => ({ id: r.id, sessionVersion: r.session_version, role: r.role });
@@ -114,4 +120,13 @@ export function listCustomers() {
        WHERE u.role = 'cliente' GROUP BY u.id ORDER BY u.created_at DESC`,
     )
     .all() as { id: string; name: string; email: string; phone: string | null; createdAt: string; orders: number; spent: number }[];
+}
+
+/** Troca o e-mail ou o celular do cliente. O contato novo volta a ficar "não confirmado". */
+export function updateContact(id: string, channel: "email" | "phone", value: string | null) {
+  const sql =
+    channel === "email"
+      ? "UPDATE users SET email = ?, email_verified_at = NULL WHERE id = ?"
+      : "UPDATE users SET phone = ?, phone_verified_at = NULL WHERE id = ?";
+  db().prepare(sql).run(value, id);
 }
