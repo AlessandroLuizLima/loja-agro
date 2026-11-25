@@ -1,5 +1,7 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import type { DatabaseSync } from "node:sqlite";
 import { slugify } from "../format";
 import type { Tint } from "../types";
@@ -71,13 +73,14 @@ export function seedDemoData(conn: DatabaseSync) {
   });
 
   const insertProduct = conn.prepare(
-    `INSERT INTO products (id, slug, name, category_id, price, old_price, unit, stock, emoji, tint, description, highlights, sale_mode, featured)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO products (id, slug, name, category_id, price, old_price, unit, stock, emoji, tint, description, highlights, sale_mode, featured, image_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   );
   for (const p of products) {
+    const slug = slugify(p.name);
     insertProduct.run(
       randomUUID(),
-      slugify(p.name),
+      slug,
       p.name,
       catIds[p.cat],
       p.price,
@@ -90,6 +93,7 @@ export function seedDemoData(conn: DatabaseSync) {
       JSON.stringify(p.highlights),
       p.consulta ? "consulta" : "online",
       p.featured ? 1 : 0,
+      demoPhoto(conn, slug),
     );
   }
 
@@ -100,4 +104,16 @@ export function seedDemoData(conn: DatabaseSync) {
   );
 
   conn.prepare("INSERT INTO coupons (id, code, percent, min_subtotal) VALUES (?, ?, ?, ?)").run(randomUUID(), "BEMVINDO10", 10, 100);
+}
+
+/**
+ * Foto de demonstração do produto (public/demo-fotos/<slug>.webp), gravada no banco como as fotos enviadas pelo painel.
+ * Fotos de licença livre; créditos em public/demo-fotos/CREDITOS.md. Sem a foto, o produto usa o emoji.
+ */
+export function demoPhoto(conn: DatabaseSync, slug: string) {
+  const file = join(/*turbopackIgnore: true*/ process.cwd(), "public", "demo-fotos", `${slug}.webp`);
+  if (!existsSync(file)) return null;
+  const id = randomUUID().replace(/-/g, ""); // mesmo formato das fotos enviadas pelo painel
+  conn.prepare("INSERT INTO images (id, mime, data) VALUES (?, 'image/webp', ?)").run(id, readFileSync(file));
+  return id;
 }
