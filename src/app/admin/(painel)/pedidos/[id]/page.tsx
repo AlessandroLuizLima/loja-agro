@@ -106,6 +106,7 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/pedid
                   <b>{f.zoneName}</b>
                   <br />
                   {f.address.street}, {f.address.number} – {f.address.district}
+                  {f.address.cep && ` · CEP ${f.address.cep}`}
                   {f.address.reference && (
                     <>
                       <br />

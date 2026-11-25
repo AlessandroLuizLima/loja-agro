@@ -30,7 +30,7 @@ export function orderMessageForStore(order: Order) {
     "",
     `*Total: ${brl(order.totals.total)}*`,
     fulfillmentLine(order),
-    address ? `Endereço: ${address.street}, ${address.number} – ${address.district}${address.reference ? ` (${address.reference})` : ""}` : "",
+    address ? `Endereço: ${address.street}, ${address.number} – ${address.district}${address.cep ? `, CEP ${address.cep}` : ""}${address.reference ? ` (${address.reference})` : ""}` : "",
     paymentLine(order),
     order.notes ? `Obs.: ${order.notes}` : "",
     "",

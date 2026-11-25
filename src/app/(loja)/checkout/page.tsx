@@ -21,6 +21,7 @@ export default async function CheckoutPage() {
     pickup: { enabled: s.pickupEnabled, dates: checkoutDates.pickup(s, today), address: `${s.address}, ${s.city} – ${s.state}`, note: s.pickupNote },
     zones: listZones().map((z) => ({ id: z.id, name: z.name, areas: z.areas, fee: z.fee, freeAbove: z.freeAbove, dates: checkoutDates.delivery(z, today) })),
     pix: { enabled: !!s.pixKey, percent: s.pixDiscountPercent },
+    city: s.city,
   };
 
   return (

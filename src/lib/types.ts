@@ -54,6 +54,11 @@ export type Product = {
   featured: boolean;
   active: boolean;
   updatedAt: string;
+  /** Variações: produtos com o mesmo grupo aparecem como uma vitrine só, com seletor de opção */
+  variantGroup: string | null;
+  variantLabel: string | null;
+  /** Só nas listas da loja: o grupo tem várias opções (o card leva à página para escolher) */
+  options?: { count: number; minPrice: number; maxPrice: number };
 };
 
 export type DeliveryZone = {
@@ -187,7 +192,7 @@ export type OrderPayload = {
     date: string;
     zoneId?: string;
     zoneName?: string;
-    address?: { street: string; number: string; district: string; reference: string };
+    address?: { street: string; number: string; district: string; reference: string; cep?: string };
   };
   items: OrderItem[];
   payment: { method: PaymentMethod; onDelivery?: OnDeliveryMethod; changeFor?: number };

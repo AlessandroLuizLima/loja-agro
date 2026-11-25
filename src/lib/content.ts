@@ -123,7 +123,7 @@ export function infoPages(s: Settings, zones: DeliveryZone[]): InfoPage[] {
         {
           heading: "Com quem compartilhamos",
           body: [
-            "Com ninguém, a não ser quando necessário para atender você: a empresa que hospeda o site (os dados ficam guardados no servidor dela) e o WhatsApp, quando você ou a loja iniciam uma conversa por ele.",
+            "Com ninguém, a não ser quando necessário para atender você: a empresa que hospeda o site (os dados ficam guardados no servidor dela), o WhatsApp, quando você ou a loja iniciam uma conversa por ele, e o ViaCEP, que recebe só o CEP digitado para preencher o endereço.",
             "Também podemos fornecer dados quando a lei ou uma autoridade exigir.",
           ],
         },

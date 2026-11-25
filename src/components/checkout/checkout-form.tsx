@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { startTransition, useActionState, useEffect, useState, type ChangeEvent, type ReactNode } from "react";
 import { placeOrder, type CheckoutState } from "@/app/(loja)/checkout/actions";
 import { dateLabel } from "@/lib/dates";
-import { brl } from "@/lib/format";
+import { brl, normalizeText } from "@/lib/format";
 import { maskPhone } from "@/lib/masks";
 import { computeTotals, zoneFee } from "@/lib/pricing";
 import type { OnDeliveryMethod, PaymentMethod } from "@/lib/types";
@@ -21,6 +21,18 @@ export type CheckoutConfig = {
   pickup: { enabled: boolean; dates: string[]; address: string; note: string };
   zones: { id: string; name: string; areas: string; fee: number; freeAbove: number | null; dates: string[] }[];
   pix: { enabled: boolean; percent: number };
+  /** Cidade da loja, para avisar quando o CEP é de outra cidade */
+  city: string;
+};
+
+type CepInfo =
+  | { status: "idle" | "loading" | "notfound" | "error" }
+  | { status: "ok"; street: string; district: string; city: string; uf: string; zoneName?: string };
+
+/** "18130000" -> "18130-000" */
+const maskCep = (v: string) => {
+  const d = v.replace(/\D/g, "").slice(0, 8);
+  return d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d;
 };
 
 type Fields = {
@@ -35,6 +47,7 @@ type Fields = {
   number: string;
   district: string;
   reference: string;
+  cep: string;
   payment: PaymentMethod;
   onDelivery: OnDeliveryMethod | "";
   changeFor: string;
@@ -61,12 +74,14 @@ export function CheckoutForm({ config, user }: { config: CheckoutConfig; user: {
     number: "",
     district: "",
     reference: "",
+    cep: "",
     payment: "na_entrega",
     onDelivery: "",
     changeFor: "",
     notes: "",
   });
   const [touched, setTouched] = useState<Set<string>>(new Set());
+  const [cepInfo, setCepInfo] = useState<CepInfo>({ status: "idle" });
 
   const update = (patch: Partial<Fields>) => {
     setF((prev) => ({ ...prev, ...patch }));
@@ -74,6 +89,28 @@ export function CheckoutForm({ config, user }: { config: CheckoutConfig; user: {
   };
   const set = (key: keyof Fields, mask?: (v: string) => string) => (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     update({ [key]: mask ? mask(e.target.value) : e.target.value } as Partial<Fields>);
+
+  /** Consulta o CEP no ViaCEP (gratuito, direto do navegador): preenche rua e bairro e sugere a região de entrega. */
+  async function lookupCep(cep: string) {
+    setCepInfo({ status: "loading" });
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${cep.replace("-", "")}/json/`, { signal: AbortSignal.timeout(6000) });
+      const data = (await res.json()) as { erro?: boolean; logradouro?: string; bairro?: string; localidade?: string; uf?: string };
+      if (!res.ok || data.erro) return setCepInfo({ status: "notfound" });
+      const street = data.logradouro ?? "";
+      const district = data.bairro ?? "";
+      const matched = district ? config.zones.find((z) => normalizeText(`${z.name} ${z.areas}`).includes(normalizeText(district))) : undefined;
+      setF((prev) => ({
+        ...prev,
+        street: street || prev.street,
+        district: district || prev.district,
+        ...(matched && !prev.zoneId && { zoneId: matched.id, deliveryDate: matched.dates[0] ?? "" }),
+      }));
+      setCepInfo({ status: "ok", street, district, city: data.localidade ?? "", uf: data.uf ?? "", zoneName: matched?.name });
+    } catch {
+      setCepInfo({ status: "error" });
+    }
+  }
 
   // Pedido criado: limpa o carrinho e vai para a confirmação
   useEffect(() => {
@@ -176,6 +213,29 @@ export function CheckoutForm({ config, user }: { config: CheckoutConfig; user: {
 
           {f.fulfillment === "entrega" && (
             <div className="mt-5 space-y-5">
+              <div>
+                <div className="flex items-end gap-3">
+                  <FormField
+                    className="w-40"
+                    label="CEP"
+                    name="cep"
+                    inputMode="numeric"
+                    autoComplete="postal-code"
+                    placeholder="00000-000"
+                    value={f.cep}
+                    onChange={(e) => {
+                      const cep = maskCep(e.target.value);
+                      update({ cep });
+                      if (cep.length === 9) void lookupCep(cep);
+                      else setCepInfo({ status: "idle" });
+                    }}
+                    error={errors.cep}
+                  />
+                  <p className="pb-3 text-xs text-muted">{cepInfo.status === "loading" ? "Buscando endereço…" : "Opcional: preenche rua e bairro"}</p>
+                </div>
+                <CepMessage info={cepInfo} storeCity={config.city} />
+              </div>
+
               <fieldset>
                 <legend className="mb-2 text-sm font-medium">
                   Sua região <span className="text-brand-dark">*</span>
@@ -395,6 +455,33 @@ function Row({ label, value, green = false }: { label: string; value: string; gr
     <div className={`flex justify-between gap-3 ${green ? "text-emerald-700" : ""}`}>
       <dt className={green ? "" : "text-muted"}>{label}</dt>
       <dd className="text-right">{value}</dd>
+    </div>
+  );
+}
+
+function CepMessage({ info, storeCity }: { info: CepInfo; storeCity: string }) {
+  if (info.status === "notfound") return <p className="mt-2 text-sm text-amber-800">CEP não encontrado. Preencha o endereço normalmente.</p>;
+  if (info.status === "error") return <p className="mt-2 text-sm text-amber-800">Não deu para consultar o CEP agora. Preencha o endereço normalmente.</p>;
+  if (info.status !== "ok") return null;
+  const otherCity = storeCity && normalizeText(info.city) !== normalizeText(storeCity);
+  return (
+    <div className="mt-2 space-y-1 text-sm">
+      {info.street ? (
+        <p className="text-emerald-700">
+          ✓ {info.street}
+          {info.district && `, ${info.district}`} – {info.city}/{info.uf}
+        </p>
+      ) : (
+        <p className="text-muted">
+          CEP geral de {info.city}/{info.uf}: preencha a rua e o bairro abaixo.
+        </p>
+      )}
+      {info.zoneName && <p className="text-emerald-700">✓ Sua região pelo CEP: {info.zoneName}</p>}
+      {otherCity && (
+        <p className="rounded-lg bg-sun-soft px-3 py-2 text-amber-800">
+          Este CEP é de {info.city}. A loja fica em {storeCity}: confira se a sua região está na lista abaixo.
+        </p>
+      )}
     </div>
   );
 }

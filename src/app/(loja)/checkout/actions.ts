@@ -22,7 +22,7 @@ export type CheckoutState =
 
 const text = (max: number) => z.string().trim().max(max);
 
-const OPTIONAL_FIELDS = ["email", "pickupDate", "zoneId", "deliveryDate", "street", "number", "district", "reference", "onDelivery", "changeFor", "notes", "coupon", "privacy"];
+const OPTIONAL_FIELDS = ["email", "pickupDate", "zoneId", "deliveryDate", "street", "number", "district", "reference", "onDelivery", "changeFor", "notes", "coupon", "privacy", "cep"];
 
 const schema = z
   .object({
@@ -42,6 +42,7 @@ const schema = z
     changeFor: text(12),
     notes: text(400),
     coupon: text(30),
+    cep: z.string().trim().regex(/^(\d{5}-?\d{3})?$/, "CEP inválido."),
     privacy: z.literal("on", { error: "Para fazer o pedido, aceite a Política de Privacidade." }),
     items: z.string().transform((s, ctx) => {
       try {
@@ -109,7 +110,7 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
       date: d.deliveryDate,
       zoneId: zone.id,
       zoneName: zone.name,
-      address: { street: d.street, number: d.number || "s/n", district: d.district, reference: d.reference },
+      address: { street: d.street, number: d.number || "s/n", district: d.district, reference: d.reference, ...(d.cep && { cep: d.cep }) },
     };
   }
 
