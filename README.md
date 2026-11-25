@@ -18,6 +18,8 @@ Feita com **Next.js 16**, **React 19**, **TypeScript**, **Tailwind CSS v4** e **
 | **Sem estoque** | Botão "Avise-me quando chegar" no WhatsApp, em vez de perder a venda |
 | **Carrinho** | Salvo no celular, com preço e estoque atualizados pelo servidor ao abrir |
 | **Retirada na loja** | Cliente escolhe o dia (hoje, amanhã…) entre os dias em que a loja abre |
+| **CEP** | Ao digitar o CEP, rua e bairro se preenchem (ViaCEP, grátis) e a região de entrega é sugerida pelo bairro; avisa se o CEP é de outra cidade |
+| **Variações** | O mesmo produto em tamanhos diferentes (ex.: ração 3 kg e 15 kg) aparece como um card só, com "a partir de" e um seletor de opção na página |
 | **Entrega por região** | Cada região tem taxa, valor para frete grátis e dias de rota (ex.: zona norte só às terças) |
 | **Pagamento** | Pix pelo site com QR Code (desconto opcional) ou pagar na retirada/entrega (dinheiro com troco, cartão ou Pix) |
 | **Confirmação** | Página do pedido com QR Pix e botão que manda o resumo pronto para o WhatsApp da loja |
@@ -31,7 +33,7 @@ Feita com **Next.js 16**, **React 19**, **TypeScript**, **Tailwind CSS v4** e **
 | **Início** | Pedidos novos, pedidos do dia (e atrasados), vendas de 24 h/7/30 dias, estoque baixo |
 | **Alerta de pedido novo** | Com o painel aberto (no balcão ou no celular), pedido novo aparece sozinho com som, aviso na tela e notificação do sistema. Com o serviço de e-mail configurado, a loja também recebe um e-mail a cada pedido |
 | **Pedidos** | Filtro por etapa, botão de próximo passo (Confirmar → Separado → Saiu para entrega → Entregue), marcar como pago, cancelar (devolve ao estoque), imprimir para separação e **mensagem pronta no WhatsApp do cliente** |
-| **Produtos** | Cadastro com foto (reduzida no próprio celular antes de enviar), preço "de/por", unidade (saco 25 kg…), estoque, destaque, ocultar. Ajuste rápido de estoque na lista. **Planilha:** baixa todos os produtos, edita no Excel e importa de volta (preço e estoque de tudo de uma vez), ou cadastra centenas de produtos novos, com conferência linha a linha antes de gravar |
+| **Produtos** | Cadastro com foto (reduzida no próprio celular antes de enviar), preço "de/por", unidade (saco 25 kg…), estoque, destaque, ocultar. Ajuste rápido de estoque na lista. **Variações:** grupo e nome da opção no cadastro. **Planilha:** baixa todos os produtos, edita no Excel e importa de volta (preço e estoque de tudo de uma vez), ou cadastra centenas de produtos novos, com conferência linha a linha antes de gravar |
 | **Categorias** | Nome, ícone, cor, ordem, visível ou não |
 | **Entregas** | Dias de retirada e regiões de entrega (taxa, grátis acima de, dias da rota) |
 | **Cupons** | Código, % de desconto, compra mínima, pausar/reativar, quantas vezes foi usado |
