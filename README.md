@@ -21,7 +21,7 @@ Feita com **Next.js 16**, **React 19**, **TypeScript**, **Tailwind CSS v4** e **
 | **Entrega por região** | Cada região tem taxa, valor para frete grátis e dias de rota (ex.: zona norte só às terças) |
 | **Pagamento** | Pix pelo site com QR Code (desconto opcional) ou pagar na retirada/entrega (dinheiro com troco, cartão ou Pix) |
 | **Confirmação** | Página do pedido com QR Pix e botão que manda o resumo pronto para o WhatsApp da loja |
-| **Conta** (opcional) | Cadastro, login e histórico de pedidos. Também dá para comprar sem cadastro |
+| **Conta** (opcional) | Cadastro, login, histórico de pedidos, confirmação de e-mail e celular por código, troca de senha e exclusão da conta. Também dá para comprar sem cadastro |
 
 ### Para o lojista (painel)
 
@@ -63,7 +63,7 @@ Em produção, cada loja usa um **endereço secreto** para o painel (`ADMIN_PATH
 | --- | --- |
 | **Transparência** | Política de Privacidade completa, montada com os dados da loja: controlador (razão social, CNPJ), encarregado, dados coletados, finalidade e base legal, compartilhamento, prazo de guarda, cookies e direitos |
 | **Consentimento registrado** | Checkbox obrigatório de aceite da política no pedido e no cadastro, com data e hora guardadas |
-| **Acesso e portabilidade** | Em Minha conta, o cliente baixa todos os seus dados (JSON) |
+| **Acesso e correção** | Em Minha conta, o cliente vê e corrige e-mail e celular (com confirmação por código) e troca a senha. Cópia dos dados: pedido ao encarregado, que responde em até 15 dias |
 | **Exclusão** | O cliente exclui a própria conta (com senha). O lojista exclui um cliente em Painel > Clientes, ou remove os dados de um pedido sem cadastro na tela do pedido. Os pedidos ficam (registro de venda), sem dados pessoais |
 | **Prazo de guarda** | Pedidos concluídos ou cancelados perdem nome, telefone, e-mail e endereço depois de X meses (padrão 24, ajustável em Configurações) |
 | **Minimização** | Só o necessário para entregar o pedido; e-mail opcional; sem cookies de propaganda (por isso não há banner de cookies) |
@@ -135,7 +135,9 @@ docker compose cp loja-a:/data/backup.db ./backup-loja-a-$(date +%F).db
 2. **Pix:** cadastre a chave Pix da loja. O QR Code é o padrão do Banco Central (Pix estático): o dinheiro cai direto na conta, e o lojista confere no app do banco e marca "pago" no painel. Para confirmação automática ou cartão online, integre um intermediador (Mercado Pago, PagBank, Asaas…) em `src/app/(loja)/checkout/actions.ts`.
 3. **Textos legais:** revise trocas, privacidade (LGPD) e termos em `src/lib/content.ts`.
 4. **Produtos controlados:** medicamentos com receita e defensivos agrícolas devem ficar como "Sob consulta".
-5. **Avisos de pedido:** hoje o cliente avisa a loja pelo WhatsApp com um toque e o lojista vê o pedido no painel. Para aviso automático (e-mail ou WhatsApp API), integre um serviço como Resend ou a API oficial do WhatsApp.
+5. **Confirmação de e-mail e celular:** para os clientes receberem o código de verdade, crie uma conta no [Resend](https://resend.com) (e-mail, grátis até 3.000/mês) e, se quiser SMS, no [Twilio](https://www.twilio.com), e preencha as variáveis `RESEND_*`/`EMAIL_FROM` e `TWILIO_*`. Sem elas, a opção de confirmar não aparece em produção.
+6. **Fotos:** as fotos de demonstração são de licença livre (créditos em `public/demo-fotos/CREDITOS.md`); numa loja de cliente, use fotos dos produtos reais dela.
+7. **Avisos de pedido:** hoje o cliente avisa a loja pelo WhatsApp com um toque e o lojista vê o pedido no painel. Para aviso automático (e-mail ou WhatsApp API), integre um serviço como Resend ou a API oficial do WhatsApp.
 
 ## Scripts
 
